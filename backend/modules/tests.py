@@ -15,6 +15,7 @@ class DiscoveryTests(SimpleTestCase):
         names = iter_module_names()
         self.assertIn("modules.health", names)
         self.assertIn("modules.clerk", names)
+        self.assertIn("modules.users", names)
         self.assertNotIn("modules.management", names)
 
 

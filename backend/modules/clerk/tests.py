@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate
 from django.test import RequestFactory, TestCase, override_settings
 
 from modules.clerk.clerk_auth import verify_clerk_request
+from modules.users.models import User
 
 
 class ClerkAuthTests(TestCase):
@@ -31,9 +32,10 @@ class ClerkAuthTests(TestCase):
         )
         response = self.client.get("/api/me/", HTTP_AUTHORIZATION="Bearer sess_test")
         self.assertEqual(response.status_code, 200)
+        user = User.objects.get(user_id="user_abc")
         self.assertEqual(
             response.json(),
-            {"user_id": "user_abc", "session_id": "sess_1"},
+            {**user.as_api(), "session_id": "sess_1"},
         )
 
     @patch("modules.clerk.clerk_auth.authenticate_request")
