@@ -38,6 +38,7 @@ def configure_admin_site(site) -> None:
     site.site_title = "Fooplace admin"
     site.index_title = "All data"
     site.login_template = "admin_flow/login.html"
+    site.index_template = "admin_flow/index.html"
 
     original_login = site.login
 
