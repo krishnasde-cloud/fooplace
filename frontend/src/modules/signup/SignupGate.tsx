@@ -69,7 +69,6 @@ function ClerkSignupGate({ requested, onFinished, onCancel, children }: SignupGa
 
   useEffect(() => {
     if (!isSignedIn) {
-      setMe(null);
       return;
     }
 
@@ -136,7 +135,8 @@ function ClerkSignupGate({ requested, onFinished, onCancel, children }: SignupGa
     return () => controller.abort();
   }, [getToken, isSignedIn, me, onFinished]);
 
-  const incomplete = Boolean(isSignedIn && me && !me.type);
+  const profile = isSignedIn ? me : null;
+  const incomplete = Boolean(profile && !profile.type);
   const showForm = requested || incomplete;
 
   if (!showForm) {
