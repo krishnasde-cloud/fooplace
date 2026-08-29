@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": false
+  },
+  "functions": {
+    "backend/fooplace/wsgi.py": {
+      "maxDuration": 60
+    }
+  }
+}
