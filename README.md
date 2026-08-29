@@ -63,10 +63,13 @@ Deploys are **manual**. GitHub Actions does not publish on push.
 1. Open **Actions → Deploy to Vercel → Run workflow**.
 2. Leave **Deploy to production** checked for the production domain, or uncheck it for a preview URL.
 3. Run the workflow. It:
+   - pulls Vercel env (Neon `DATABASE_URL`, `VITE_CLERK_PUBLISHABLE_KEY`)
+   - writes `frontend/.env.production` so Vite can inline the Clerk publishable key
    - builds `//frontend:bundle` and copies it to `public/` (SPA at `/`)
-   - pulls Vercel env (Neon `DATABASE_URL`)
    - on production, runs `bazel run //backend:manage -- migrate --noinput`
    - deploys Django as a Vercel Function at `api/index.py` (SPA stays in `public/`)
+
+After changing Vercel env vars, re-run this workflow. Vite cannot read keys that were added only after the frontend was already built.
 
 Credentials live in the GitHub Environment **Vercel-prod** (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). The Vercel project is already linked to the Neon production database. Django reads `DATABASE_URL` (Neon on Vercel; local Docker Compose Postgres). Bazel tests can use SQLite via `FOOPLACE_USE_SQLITE=1`.
 
@@ -78,7 +81,7 @@ Sign-in lives in the React header (`frontend/src/AuthHeader.tsx`). Copy `fronten
 
 | Name | Required | Notes |
 | --- | --- | --- |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite bakes this in at **build** time. |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite bakes this in at **build** time (the deploy workflow pulls it from Vercel before Bazel runs). |
 | `CLERK_SECRET_KEY` | No | Server-only. Skip on Vercel for this static frontend. Add later if Django should verify Clerk JWTs. |
 
 Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.

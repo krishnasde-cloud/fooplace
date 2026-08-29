@@ -8,10 +8,17 @@
       "maxDuration": 60
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "/api"
+      "src": "/api/(.*)",
+      "dest": "/api",
+      "transforms": [
+        {
+          "type": "request.path",
+          "op": "set",
+          "args": "/api/$1"
+        }
+      ]
     }
   ]
 }
