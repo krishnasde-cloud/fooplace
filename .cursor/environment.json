@@ -1,0 +1,20 @@
+{
+  "name": "fooplace",
+  "install": "npm install",
+  "terminals": [
+    {
+      "name": "api",
+      "command": "npm run dev:server",
+      "description": "Fooplace Express API (http://localhost:3001)."
+    },
+    {
+      "name": "web",
+      "command": "npm run dev:web",
+      "description": "Fooplace Vite dev server (http://localhost:5173), proxies /api to the API."
+    }
+  ],
+  "ports": [
+    { "name": "api", "port": 3001 },
+    { "name": "web", "port": 5173 }
+  ]
+}
