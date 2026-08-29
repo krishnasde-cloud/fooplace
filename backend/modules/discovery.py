@@ -20,7 +20,12 @@ def iter_module_names() -> list[str]:
 
 
 def module_urlpatterns():
-    """Mount each module that has ``urls.py`` at ``/api/<name>/``."""
+    """Mount each module that has ``urls.py`` at ``/api/<prefix>/``.
+
+    Prefix defaults to the folder name. Set ``AppConfig.api_prefix`` to override
+    (the clerk module uses ``me`` so ``GET /api/me/`` stays stable).
+    """
+    from django.apps import apps
     from django.urls import include, path
 
     patterns = []
@@ -28,5 +33,7 @@ def module_urlpatterns():
         short = name.rsplit(".", 1)[-1]
         if not (MODULES_ROOT / short / "urls.py").is_file():
             continue
-        patterns.append(path(f"api/{short}/", include((f"{name}.urls", short))))
+        config = apps.get_app_config(short)
+        prefix = getattr(config, "api_prefix", short)
+        patterns.append(path(f"api/{prefix}/", include((f"{name}.urls", short))))
     return patterns

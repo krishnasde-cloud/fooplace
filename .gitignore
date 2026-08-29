@@ -8,8 +8,15 @@
 # Node
 node_modules
 dist
+public
 .vite-work
 *.local
+.vercel
+
+# Env (copy frontend/.env.example → frontend/.env.local)
+.env
+.env.*
+!.env.example
 
 # Python
 __pycache__/
@@ -20,6 +27,7 @@ __pycache__/
 
 # Django
 backend/db.sqlite3
+backend/staticfiles/
 *.sqlite3
 
 # OS / editors

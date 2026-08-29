@@ -3,7 +3,8 @@ from tempfile import TemporaryDirectory
 
 from django.core.management import call_command, get_commands
 from django.core.management.base import CommandError
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
+from django.urls import reverse
 
 from modules.discovery import iter_module_names
 from modules.scaffold import BACKEND_FILES, FRONTEND_FILES, write_module
@@ -13,7 +14,22 @@ class DiscoveryTests(SimpleTestCase):
     def test_discovers_health_and_skips_non_apps(self):
         names = iter_module_names()
         self.assertIn("modules.health", names)
+        self.assertIn("modules.clerk", names)
         self.assertNotIn("modules.management", names)
+
+
+class ModuleUrlTests(TestCase):
+    def test_health_and_me_are_mounted(self):
+        self.assertEqual(
+            {
+                "health": reverse("health:health"),
+                "me": reverse("clerk:me"),
+            },
+            {
+                "health": "/api/health/",
+                "me": "/api/me/",
+            },
+        )
 
 
 class ScaffoldTests(SimpleTestCase):

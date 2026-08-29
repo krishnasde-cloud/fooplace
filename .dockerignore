@@ -1,0 +1,12 @@
+.git
+.cursor
+**/node_modules
+**/__pycache__
+**/*.py[cod]
+**/*.sqlite3
+**/dist
+**/.vite-work
+bazel-*
+.env
+.env.*
+!.env.example
