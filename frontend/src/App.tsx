@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
+import { AuthHeader } from "./AuthHeader.tsx";
 import "./App.css";
 
 type HealthResponse = {
@@ -39,6 +40,7 @@ function App() {
 
   return (
     <>
+      <AuthHeader />
       <section id="center">
         <div className="hero">
           <img src={reactLogo} className="framework" alt="React logo" />

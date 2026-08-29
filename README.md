@@ -37,6 +37,19 @@ pnpm --filter @fooplace/frontend dev
 
 The SPA calls `GET /api/health/`. With both servers running, Vite proxies that path to Django.
 
+## Clerk auth
+
+Sign-in lives in the React header (`frontend/src/AuthHeader.tsx`). Copy `frontend/.env.example` to `frontend/.env.local` for local keys.
+
+### Env vars to add on Vercel
+
+| Name | Required | Notes |
+| --- | --- | --- |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite bakes this in at **build** time. |
+| `CLERK_SECRET_KEY` | No | Server-only. Skip on Vercel for this static frontend. Add later if Django should verify Clerk JWTs. |
+
+Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.
+
 ## Refreshing Python locks
 
 ```bash
