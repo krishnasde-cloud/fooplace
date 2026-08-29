@@ -1,8 +1,8 @@
 """WSGI app Vercel loads from ``api/index.py``.
 
-File-based Python functions must live under ``/api``. This wrapper keeps
-Django's URLConf (``/api/...``) when Vercel rewrites those requests onto
-that function.
+File-based Python functions must live under ``/api``. Vercel routes nested
+``/api/...`` requests onto that function, so this wrapper restores Django's
+URLConf path when PATH_INFO has been collapsed to the function root.
 """
 
 from __future__ import annotations
@@ -11,17 +11,28 @@ from urllib.parse import unquote, urlsplit
 
 from fooplace.wsgi import application as _django
 
+_FUNCTION_ROOTS = frozenset({"/api", "/api/"})
+
+
+def _normalize(path: str) -> str:
+    if not path.startswith("/"):
+        return f"/{path}"
+    return path
+
 
 def django_path_info(environ: dict) -> str:
-    path = environ.get("PATH_INFO") or "/"
+    path = _normalize(environ.get("PATH_INFO") or "/")
     raw = environ.get("REQUEST_URI") or environ.get("RAW_URI") or ""
     orig = unquote(urlsplit(raw).path) if raw else ""
-    if orig.startswith("/api"):
-        return orig
-    if path.startswith("/api"):
-        return path
-    if not path.startswith("/"):
-        path = f"/{path}"
+    orig = _normalize(orig) if orig else ""
+
+    candidates = [candidate for candidate in (path, orig) if candidate.startswith("/api")]
+    specific = [candidate for candidate in candidates if candidate not in _FUNCTION_ROOTS]
+    if specific:
+        return max(specific, key=len)
+    if candidates:
+        return "/api"
+
     return "/api" if path == "/" else f"/api{path}"
 
 

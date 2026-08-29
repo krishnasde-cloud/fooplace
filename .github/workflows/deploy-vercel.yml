@@ -45,6 +45,41 @@ jobs:
           disk-cache: ${{ github.workflow }}
           repository-cache: true
 
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment
+        run: |
+          if [ "${{ inputs.production }}" = "true" ]; then
+            vercel pull --yes --environment=production
+          else
+            vercel pull --yes --environment=preview
+          fi
+
+      - name: Bake Clerk key into the frontend
+        run: |
+          env_file=""
+          for f in .vercel/.env.production.local .vercel/.env.preview.local .env.local; do
+            if [ -f "$f" ]; then
+              env_file="$f"
+              break
+            fi
+          done
+          if [ -z "$env_file" ]; then
+            echo "::warning::No Vercel env file after pull; frontend will build without Clerk."
+            exit 0
+          fi
+          set -a
+          # shellcheck disable=SC1090
+          . "$env_file"
+          set +a
+          if [ -z "${VITE_CLERK_PUBLISHABLE_KEY:-}" ]; then
+            echo "::warning::VITE_CLERK_PUBLISHABLE_KEY is not set on the Vercel project. Sign-in will stay disabled until it is added and this workflow is re-run."
+            exit 0
+          fi
+          printf 'VITE_CLERK_PUBLISHABLE_KEY=%s\n' "$VITE_CLERK_PUBLISHABLE_KEY" > frontend/.env.production
+          echo "Wrote frontend/.env.production for Vite (key value not logged)."
+
       - name: Build frontend
         run: bazel build //frontend:bundle
 
@@ -57,17 +92,6 @@ jobs:
           cp -aL "${bin}/frontend/dist/." public/
           chmod -R u+w public
           test -f public/index.html
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Pull Vercel environment
-        run: |
-          if [ "${{ inputs.production }}" = "true" ]; then
-            vercel pull --yes --environment=production
-          else
-            vercel pull --yes --environment=preview
-          fi
 
       - name: Migrate Neon (production only)
         if: ${{ inputs.production }}

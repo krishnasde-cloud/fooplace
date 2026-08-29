@@ -54,7 +54,7 @@ function App() {
           {health
             ? `API ${health.service}: ${health.status}`
             : healthError
-              ? `API unreachable (${healthError}). Start the Django server on :8000.`
+              ? `API unreachable (${healthError}).`
               : "Checking Django API…"}
         </p>
         <button

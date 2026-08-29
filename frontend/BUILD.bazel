@@ -41,6 +41,14 @@ js_run_binary(
     ] + glob(
         ["public/**"],
         allow_empty = True,
+    ) + glob(
+        [
+            ".env",
+            ".env.production",
+            ".env.production.local",
+            ".env.local",
+        ],
+        allow_empty = True,
     ),
     args = ["build"],
     chdir = package_name(),
