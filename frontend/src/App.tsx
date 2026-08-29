@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
 import { AuthHeader } from "./AuthHeader.tsx";
+import { ClerkSessionStatus } from "./ClerkSessionStatus.tsx";
 import "./App.css";
+
+const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 type HealthResponse = {
   status: string;
@@ -57,6 +60,7 @@ function App() {
               ? `API unreachable (${healthError}). Start the Django server on :8000.`
               : "Checking Django API…"}
         </p>
+        {publishableKey ? <ClerkSessionStatus /> : null}
         <button
           type="button"
           className="counter"

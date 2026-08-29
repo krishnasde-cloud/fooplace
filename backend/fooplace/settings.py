@@ -37,8 +37,30 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Clerk is the only auth. This overwrites session users on every request.
+    "api.clerk_auth.ClerkAuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+# Clerk session tokens only — no ModelBackend / password / session login.
+AUTHENTICATION_BACKENDS = [
+    "api.clerk_auth.ClerkBackend",
+]
+
+# Required on the Django host to verify Clerk JWTs (not used by the Vite SPA).
+# Add on the API server; skip on Vercel unless Django is also deployed there.
+CLERK_SECRET_KEY = os.environ.get("CLERK_SECRET_KEY", "")
+# Optional PEM public key for networkless verification (Dashboard → API keys).
+CLERK_JWT_KEY = os.environ.get("CLERK_JWT_KEY") or None
+# Frontend origins allowed in the session token azp claim.
+CLERK_AUTHORIZED_PARTIES = [
+    party.strip()
+    for party in os.environ.get(
+        "CLERK_AUTHORIZED_PARTIES",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if party.strip()
 ]
 
 ROOT_URLCONF = "fooplace.urls"

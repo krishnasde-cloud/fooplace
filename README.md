@@ -39,14 +39,20 @@ The SPA calls `GET /api/health/`. With both servers running, Vite proxies that p
 
 ## Clerk auth
 
-Sign-in lives in the React header (`frontend/src/AuthHeader.tsx`). Copy `frontend/.env.example` to `frontend/.env.local` for local keys.
+Clerk is the only authentication method. The React header signs users in; Django
+verifies the Clerk session JWT and rejects password / session login.
 
-### Env vars to add on Vercel
+Copy `frontend/.env.example` → `frontend/.env.local` and `backend/.env.example`
+→ `backend/.env` for local keys.
 
-| Name | Required | Notes |
-| --- | --- | --- |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite bakes this in at **build** time. |
-| `CLERK_SECRET_KEY` | No | Server-only. Skip on Vercel for this static frontend. Add later if Django should verify Clerk JWTs. |
+### Env vars
+
+| Name | Where | Required | Notes |
+| --- | --- | --- | --- |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Vercel (Production + Preview) and local Vite | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite bakes `VITE_*` in at **build** time. |
+| `CLERK_SECRET_KEY` | Django host (not the static Vercel SPA) | Yes for API auth | Server-only. Never expose to the browser. |
+| `CLERK_JWT_KEY` | Django host | No | Optional PEM public key for networkless JWT verification. |
+| `CLERK_AUTHORIZED_PARTIES` | Django host | Recommended in prod | Comma-separated frontend origins (your Vercel URL). Defaults to local Vite. |
 
 Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.
 
