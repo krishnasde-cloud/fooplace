@@ -10,18 +10,8 @@ from clerk_backend_api.security.types import (
 from django.contrib.auth import authenticate
 from django.test import RequestFactory, TestCase, override_settings
 
-from api.clerk_auth import verify_clerk_request
-from api.models import User
-
-
-class HealthTests(TestCase):
-    def test_health_returns_ok(self):
-        response = self.client.get("/api/health/")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json(),
-            {"status": "ok", "service": "fooplace-backend"},
-        )
+from modules.clerk.clerk_auth import verify_clerk_request
+from modules.users.models import User
 
 
 class ClerkAuthTests(TestCase):
@@ -33,7 +23,7 @@ class ClerkAuthTests(TestCase):
             {"detail": AuthErrorReason.SESSION_TOKEN_MISSING.name},
         )
 
-    @patch("api.clerk_auth.authenticate_request")
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_me_returns_clerk_user(self, mock_authenticate):
         mock_authenticate.return_value = RequestState(
             status=AuthStatus.SIGNED_IN,
@@ -48,7 +38,7 @@ class ClerkAuthTests(TestCase):
             {**user.as_api(), "session_id": "sess_1"},
         )
 
-    @patch("api.clerk_auth.authenticate_request")
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_invalid_clerk_token_is_rejected(self, mock_authenticate):
         mock_authenticate.return_value = RequestState(
             status=AuthStatus.SIGNED_OUT,
@@ -69,7 +59,7 @@ class ClerkAuthTests(TestCase):
         CLERK_JWT_KEY=None,
         CLERK_AUTHORIZED_PARTIES=["https://fooplace.example"],
     )
-    @patch("api.clerk_auth.authenticate_request")
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_verify_passes_session_token_and_authorized_parties(self, mock_authenticate):
         mock_authenticate.return_value = RequestState(
             status=AuthStatus.SIGNED_OUT,

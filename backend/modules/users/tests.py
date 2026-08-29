@@ -5,8 +5,8 @@ from clerk_backend_api.security.types import AuthStatus, RequestState
 from django.test import TestCase
 from django.utils import timezone
 
-from api.models import User
-from api.user_sync import ClerkProfile, profile_from_clerk_user
+from modules.users.models import User
+from modules.users.user_sync import ClerkProfile, profile_from_clerk_user
 
 
 def _signed_in(payload: dict) -> RequestState:
@@ -18,7 +18,7 @@ def _signed_in(payload: dict) -> RequestState:
 
 
 class UserLinkTests(TestCase):
-    @patch("api.clerk_auth.authenticate_request")
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_me_creates_user_from_clerk_session(self, mock_authenticate):
         mock_authenticate.return_value = _signed_in(
             {
@@ -44,8 +44,8 @@ class UserLinkTests(TestCase):
             {**user.as_api(), "session_id": "sess_1"},
         )
 
-    @patch("api.user_sync.fetch_clerk_profile")
-    @patch("api.clerk_auth.authenticate_request")
+    @patch("modules.users.user_sync.fetch_clerk_profile")
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_me_fills_profile_from_clerk(self, mock_authenticate, mock_fetch):
         mock_fetch.return_value = ClerkProfile(
             email="buyer@example.com",
@@ -71,7 +71,7 @@ class UserLinkTests(TestCase):
             {**user.as_api(), "session_id": "sess_1"},
         )
 
-    @patch("api.clerk_auth.authenticate_request")
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_second_sign_in_updates_the_same_user(self, mock_authenticate):
         first = timezone.now()
         User.objects.create(
@@ -98,7 +98,7 @@ class UserLinkTests(TestCase):
             {**user.as_api(), "session_id": "sess_2"},
         )
 
-    @patch("api.clerk_auth.authenticate_request")
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_inactive_user_is_rejected(self, mock_authenticate):
         now = timezone.now()
         User.objects.create(

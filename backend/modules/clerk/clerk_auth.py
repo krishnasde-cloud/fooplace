@@ -17,8 +17,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
-from api.models import User
-from api.user_sync import link_clerk_user
+from modules.users.models import User
+from modules.users.user_sync import link_clerk_user
 
 # Liveness stays public so the SPA can check Django without a session.
 PUBLIC_API_PATHS = frozenset({"/api/health/", "/api/health"})

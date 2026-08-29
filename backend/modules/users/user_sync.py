@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from django.conf import settings
 from django.utils import timezone
 
-from api.models import User
+from modules.users.models import User
 
 
 @dataclass(frozen=True)
