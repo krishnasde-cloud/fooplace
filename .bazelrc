@@ -1,0 +1,8 @@
+common --enable_bzlmod
+common --lockfile_mode=update
+
+build --incompatible_strict_action_env
+build --enable_platform_specific_config
+
+test --test_output=errors
+test --test_verbose_timeout_warnings

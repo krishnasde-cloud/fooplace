@@ -1,0 +1,4 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+# Link the pnpm workspace so package targets can depend on npm deps.
+npm_link_all_packages(name = "node_modules")
