@@ -50,7 +50,7 @@ def request_frontend_origins(request) -> list[str]:
             if origin not in origins:
                 origins.append(origin)
 
-    host = request.get_host()
+    host = request.META.get("HTTP_HOST") or request.META.get("SERVER_NAME")
     if host:
         on_vercel = bool(os.environ.get("VERCEL"))
         scheme = "https" if on_vercel or request.is_secure() else request.scheme
