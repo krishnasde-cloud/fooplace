@@ -22,6 +22,7 @@ py_library(
     deps = [
         "@fooplace_pypi//django",
         "@fooplace_pypi//django_cors_headers",
+        "@fooplace_pypi//clerk_backend_api",
         "@fooplace_pypi//psycopg",
         "@fooplace_pypi//psycopg_binary",
     ],

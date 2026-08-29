@@ -6,4 +6,5 @@ dependencies = [
     "Django==6.1",
     "django-cors-headers==4.9.0",
     "psycopg[binary]==3.3.4",
+    "clerk-backend-api==7.0.0",
 ]

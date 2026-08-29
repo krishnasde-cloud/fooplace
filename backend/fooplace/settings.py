@@ -52,9 +52,40 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Clerk is the only auth. This overwrites session users on every request.
+    "api.clerk_auth.ClerkAuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Clerk session tokens only — no ModelBackend / password / session login.
+AUTHENTICATION_BACKENDS = [
+    "api.clerk_auth.ClerkBackend",
+]
+
+
+def _csv_env(name: str, default: str = "") -> list[str]:
+    return [
+        item.strip()
+        for item in os.environ.get(name, default).split(",")
+        if item.strip()
+    ]
+
+
+# Required on Vercel (Django runs there) and locally to verify session JWTs.
+CLERK_SECRET_KEY = os.environ.get("CLERK_SECRET_KEY", "")
+# Optional PEM public key for networkless verification (Dashboard → API keys).
+CLERK_JWT_KEY = os.environ.get("CLERK_JWT_KEY") or None
+# Frontend origins allowed in the session token azp claim.
+# CLERK_AUTHORIZED_PARTIES is already set on Vercel; local default is Vite.
+CLERK_AUTHORIZED_PARTIES = _csv_env(
+    "CLERK_AUTHORIZED_PARTIES",
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
+if os.environ.get("VERCEL_URL"):
+    vercel_origin = f"https://{os.environ['VERCEL_URL']}"
+    if vercel_origin not in CLERK_AUTHORIZED_PARTIES:
+        CLERK_AUTHORIZED_PARTIES.append(vercel_origin)
 
 ROOT_URLCONF = "fooplace.urls"
 

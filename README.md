@@ -75,16 +75,25 @@ Credentials live in the GitHub Environment **Vercel-prod** (`VERCEL_TOKEN`, `VER
 
 ## Clerk auth
 
-Sign-in lives in the React header (`frontend/src/AuthHeader.tsx`). Copy `frontend/.env.example` to `frontend/.env.local` for local keys.
+Clerk is the only authentication method. The React header signs users in; Django
+verifies the Clerk session JWT (`clerk-backend-api`) and rejects password /
+session login. `GET /api/health/` stays public; every other `/api/` route needs
+a valid session token.
 
-### Env vars to add on Vercel
+### Env vars (Vercel Production + Preview)
+
+Django runs on Vercel, so these are project env vars (not frontend-only):
 
 | Name | Required | Notes |
 | --- | --- | --- |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite bakes this in at **build** time (the deploy workflow pulls it from Vercel before Bazel runs). |
-| `CLERK_SECRET_KEY` | No | Server-only. Skip on Vercel for this static frontend. Add later if Django should verify Clerk JWTs. |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite inlines `VITE_*` at **build** time (the deploy workflow pulls it from Vercel before Bazel runs). |
+| `CLERK_SECRET_KEY` | Yes | Server-only. Django uses this to verify session JWTs. Never expose to the browser. |
+| `CLERK_AUTHORIZED_PARTIES` | Already set | Comma-separated frontend origins for the token `azp` claim. Preview deploys also include `https://$VERCEL_URL`. |
+| `CLERK_JWT_KEY` | No | Optional PEM public key for networkless JWT verification. |
 
 Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.
+
+Locally: `frontend/.env.example` → `frontend/.env.local` and `backend/.env.example` → `backend/.env`. Docker Compose forwards the Clerk vars from the host environment.
 
 ## Refreshing Python locks
 
