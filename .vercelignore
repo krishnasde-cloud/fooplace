@@ -1,0 +1,11 @@
+.git
+frontend
+node_modules
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+bazel-*
+**/.venv
+**/__pycache__
+**/*.pyc
+**/*.sqlite3

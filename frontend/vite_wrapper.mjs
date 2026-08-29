@@ -23,6 +23,10 @@ if (command === "build") {
     "tsconfig.json",
     "tsconfig.app.json",
     "tsconfig.node.json",
+    ".env",
+    ".env.local",
+    ".env.production",
+    ".env.production.local",
   ]) {
     const from = path.join(cwd, name);
     if (existsSync(from)) {

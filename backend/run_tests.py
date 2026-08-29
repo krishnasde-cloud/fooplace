@@ -3,6 +3,7 @@
 import os
 import sys
 
+os.environ.setdefault("FOOPLACE_USE_SQLITE", "1")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fooplace.settings")
 
 import django

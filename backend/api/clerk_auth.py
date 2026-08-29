@@ -18,7 +18,7 @@ from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
 # Liveness stays public so the SPA can check Django without a session.
-PUBLIC_API_PATHS = frozenset({"/api/health/"})
+PUBLIC_API_PATHS = frozenset({"/api/health/", "/api/health"})
 
 
 @dataclass
@@ -55,13 +55,13 @@ class ClerkBackend:
 
 
 def verify_clerk_request(request) -> RequestState:
-    authorized_parties = getattr(settings, "CLERK_AUTHORIZED_PARTIES", None) or None
+    parties = list(settings.CLERK_AUTHORIZED_PARTIES)
     return authenticate_request(
         request,
         AuthenticateRequestOptions(
             secret_key=settings.CLERK_SECRET_KEY or None,
             jwt_key=settings.CLERK_JWT_KEY or None,
-            authorized_parties=authorized_parties,
+            authorized_parties=parties or None,
             accepts_token=["session_token"],
         ),
     )

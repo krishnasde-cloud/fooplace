@@ -1,13 +1,16 @@
 from unittest.mock import patch
 
 from clerk_backend_api.security.types import (
+    AuthenticateRequestOptions,
     AuthErrorReason,
     AuthStatus,
     RequestState,
     TokenVerificationErrorReason,
 )
 from django.contrib.auth import authenticate
-from django.test import TestCase
+from django.test import RequestFactory, TestCase, override_settings
+
+from api.clerk_auth import verify_clerk_request
 
 
 class HealthTests(TestCase):
@@ -58,3 +61,27 @@ class ClerkAuthTests(TestCase):
 
     def test_password_authenticate_is_disabled(self):
         self.assertIsNone(authenticate(username="anyone", password="secret"))
+
+    @override_settings(
+        CLERK_SECRET_KEY="sk_test",
+        CLERK_JWT_KEY=None,
+        CLERK_AUTHORIZED_PARTIES=["https://fooplace.example"],
+    )
+    @patch("api.clerk_auth.authenticate_request")
+    def test_verify_passes_session_token_and_authorized_parties(self, mock_authenticate):
+        mock_authenticate.return_value = RequestState(
+            status=AuthStatus.SIGNED_OUT,
+            reason=AuthErrorReason.SESSION_TOKEN_MISSING,
+        )
+        verify_clerk_request(RequestFactory().get("/api/me/"))
+        request, options = mock_authenticate.call_args.args
+        self.assertEqual(request.path, "/api/me/")
+        self.assertEqual(
+            options,
+            AuthenticateRequestOptions(
+                secret_key="sk_test",
+                jwt_key=None,
+                authorized_parties=["https://fooplace.example"],
+                accepts_token=["session_token"],
+            ),
+        )
