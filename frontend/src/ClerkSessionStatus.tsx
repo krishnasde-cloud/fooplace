@@ -3,6 +3,13 @@ import { useEffect, useState } from "react";
 
 type MeResponse = {
   user_id: string;
+  email: string;
+  connected_using: string;
+  type: "buyer" | "seller";
+  is_active: boolean;
+  is_verified: boolean;
+  first_logged_in: string;
+  last_logged_in: string;
   session_id: string | null;
 };
 
@@ -55,7 +62,7 @@ export function ClerkSessionStatus() {
   return (
     <p className={`status ${me ? "ok" : meError ? "err" : "pending"}`}>
       {me
-        ? `Signed in as ${me.user_id}`
+        ? `Signed in as ${me.email || me.user_id} (${me.type})`
         : meError
           ? `Django rejected the Clerk session (${meError}).`
           : "Checking Clerk session with Django…"}

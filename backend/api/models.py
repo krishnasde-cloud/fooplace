@@ -1,1 +1,41 @@
-# Create your models here.
+import json
+
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
+
+
+class User(models.Model):
+    """App user linked to a Clerk account by `user_id`."""
+
+    class UserType(models.TextChoices):
+        BUYER = "buyer", "Buyer"
+        SELLER = "seller", "Seller"
+
+    user_id = models.CharField(max_length=64, unique=True)
+    email = models.EmailField(blank=True)
+    connected_using = models.CharField(max_length=64, blank=True)
+    user_type = models.CharField(
+        max_length=16,
+        choices=UserType.choices,
+        default=UserType.BUYER,
+    )
+    is_active = models.BooleanField(default=True)
+    is_verified = models.BooleanField(default=False)
+    first_logged_in = models.DateTimeField()
+    last_logged_in = models.DateTimeField()
+
+    def __str__(self) -> str:
+        return self.email or self.user_id
+
+    def as_api(self) -> dict:
+        raw = {
+            "user_id": self.user_id,
+            "email": self.email,
+            "connected_using": self.connected_using,
+            "type": self.user_type,
+            "is_active": self.is_active,
+            "is_verified": self.is_verified,
+            "first_logged_in": self.first_logged_in,
+            "last_logged_in": self.last_logged_in,
+        }
+        return json.loads(json.dumps(raw, cls=DjangoJSONEncoder))

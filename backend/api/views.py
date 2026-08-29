@@ -12,11 +12,8 @@ def health(_request):
 
 
 def me(request):
-    """Return the Clerk user attached by ClerkAuthenticationMiddleware."""
+    """Return the local User linked to the current Clerk session."""
     payload = getattr(request.user, "payload", {})
-    return JsonResponse(
-        {
-            "user_id": request.user.id,
-            "session_id": payload.get("sid"),
-        }
-    )
+    body = request.user.record.as_api()
+    body["session_id"] = payload.get("sid")
+    return JsonResponse(body)
