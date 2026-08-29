@@ -1,10 +1,11 @@
 from django.contrib import admin
 
+from modules.admin_flow.site import StaffModelAdmin
 from modules.users.models import User
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(StaffModelAdmin, admin.ModelAdmin):
     list_display = (
         "user_id",
         "email",

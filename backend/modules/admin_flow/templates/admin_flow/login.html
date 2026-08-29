@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .admin-flow-login { max-width: 28rem; }
+  .admin-flow-login p { line-height: 1.5; }
+  #clerk-sign-in { margin-top: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div class="admin-flow-login">
+  {% if signed_in and not is_admin %}
+    <p>This Clerk account is signed in, but it is not an admin. Only users with type=admin can open Django admin.</p>
+    <p>Promote an existing user with <code>promoteadmin</code>, then refresh.</p>
+  {% elif clerk_publishable_key %}
+    <p>Sign in with Clerk. Django admin is limited to admin users and can edit every registered model.</p>
+    <div id="clerk-sign-in"></div>
+    <script>
+      (function () {
+        var key = "{{ clerk_publishable_key|escapejs }}";
+        var script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js";
+        script.async = true;
+        script.onload = function () {
+          var ClerkCtor = window.Clerk;
+          if (!ClerkCtor) {
+            return;
+          }
+          var clerk = typeof ClerkCtor === "function" ? new ClerkCtor(key) : ClerkCtor;
+          var start = clerk.load ? clerk.load({ publishableKey: key }) : Promise.resolve();
+          Promise.resolve(start).then(function () {
+            if (clerk.isSignedIn || clerk.user) {
+              window.location.reload();
+              return;
+            }
+            var mount = document.getElementById("clerk-sign-in");
+            if (clerk.mountSignIn && mount) {
+              clerk.mountSignIn(mount);
+            }
+          });
+        };
+        document.head.appendChild(script);
+      })();
+    </script>
+  {% else %}
+    <p>Sign in with Clerk, then open this page with a valid session cookie.</p>
+    <p>New accounts are buyers. Promote an admin with:</p>
+    <p><code>bazel run //backend:manage -- promoteadmin you@example.com</code></p>
+  {% endif %}
+</div>
+{% endblock %}

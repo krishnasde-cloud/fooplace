@@ -6,7 +6,7 @@ import { SignupForm } from "./SignupForm.tsx";
 import type { SignupPayload } from "./types.ts";
 
 type MeResponse = {
-  type: "buyer" | "seller" | "";
+  type: "buyer" | "seller" | "admin" | "";
 };
 
 type SignupGateProps = {
