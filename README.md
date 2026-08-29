@@ -50,6 +50,18 @@ Deploys are **manual**. GitHub Actions does not publish on push.
    - deploys Django via Vercel’s Python runtime (`backend/manage.py` / `fooplace.wsgi`)
 
 Credentials live in the GitHub Environment **Vercel-prod** (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). The Vercel project is already linked to the Neon production database. Django reads `DATABASE_URL` and falls back to SQLite locally.
+## Clerk auth
+
+Sign-in lives in the React header (`frontend/src/AuthHeader.tsx`). Copy `frontend/.env.example` to `frontend/.env.local` for local keys.
+
+### Env vars to add on Vercel
+
+| Name | Required | Notes |
+| --- | --- | --- |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite bakes this in at **build** time. |
+| `CLERK_SECRET_KEY` | No | Server-only. Skip on Vercel for this static frontend. Add later if Django should verify Clerk JWTs. |
+
+Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.
 
 ## Refreshing Python locks
 

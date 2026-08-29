@@ -13,6 +13,11 @@ public
 *.local
 .vercel
 
+# Env (copy frontend/.env.example → frontend/.env.local)
+.env
+.env.*
+!.env.example
+
 # Python
 __pycache__/
 *.py[cod]
