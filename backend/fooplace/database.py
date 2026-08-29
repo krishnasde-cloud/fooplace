@@ -1,4 +1,4 @@
-"""Build Django DATABASES from DATABASE_URL (Neon/Vercel) or local SQLite."""
+"""Build Django DATABASES from DATABASE_URL, Postgres env vars, or SQLite."""
 
 from __future__ import annotations
 
@@ -15,14 +15,25 @@ def postgres_from_url(raw: str) -> dict[str, Any]:
     config: dict[str, Any] = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": url.path.lstrip("/"),
-        "USER": url.username or "",
-        "PASSWORD": url.password or "",
+        "USER": urllib.parse.unquote(url.username) if url.username else "",
+        "PASSWORD": urllib.parse.unquote(url.password) if url.password else "",
         "HOST": url.hostname or "",
-        "PORT": str(url.port or ""),
+        "PORT": str(url.port or "5432"),
     }
     if "sslmode" in query:
         config["OPTIONS"] = {"sslmode": query["sslmode"][0]}
     return config
+
+
+def postgres_from_env() -> dict[str, Any]:
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "fooplace"),
+        "USER": os.environ.get("POSTGRES_USER", "fooplace"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "fooplace"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+    }
 
 
 def sqlite_default(base_dir: Path) -> dict[str, Any]:
@@ -35,7 +46,14 @@ def sqlite_default(base_dir: Path) -> dict[str, Any]:
 
 
 def databases(*, base_dir: Path) -> dict[str, dict[str, Any]]:
+    """Postgres is the application database.
+
+    Set FOOPLACE_USE_SQLITE=1 for hermetic unit tests (Bazel) that should not
+    need a running Postgres. DATABASE_URL (Neon/Vercel) wins over POSTGRES_* vars.
+    """
+    if os.environ.get("FOOPLACE_USE_SQLITE") == "1":
+        return {"default": sqlite_default(base_dir)}
     raw = os.environ.get("DATABASE_URL")
     if raw:
         return {"default": postgres_from_url(raw)}
-    return {"default": sqlite_default(base_dir)}
+    return {"default": postgres_from_env()}

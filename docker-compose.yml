@@ -1,0 +1,82 @@
+name: fooplace
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: fooplace
+      POSTGRES_USER: fooplace
+      POSTGRES_PASSWORD: fooplace
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fooplace -d fooplace"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://fooplace:fooplace@db:5432/fooplace
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend,0.0.0.0
+      FOOPLACE_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/')",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      FOOPLACE_API_PROXY: http://backend:8000
+      FOOPLACE_VITE_HOST: "0.0.0.0"
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./frontend/src:/workspace/frontend/src
+      - ./frontend/public:/workspace/frontend/public
+      - ./frontend/index.html:/workspace/frontend/index.html
+      - ./frontend/vite.config.ts:/workspace/frontend/vite.config.ts
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:5173').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+volumes:
+  postgres_data:

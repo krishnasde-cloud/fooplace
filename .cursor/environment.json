@@ -1,0 +1,21 @@
+{
+  "name": "fooplace",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "user": "ubuntu",
+  "install": "pnpm install --frozen-lockfile",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "docker-compose",
+      "command": "docker compose logs -f",
+      "description": "Follow logs from the local Postgres, Django, and Vite containers."
+    }
+  ],
+  "ports": [
+    { "name": "frontend", "port": 5173 },
+    { "name": "backend", "port": 8000 },
+    { "name": "postgres", "port": 5432 }
+  ]
+}
