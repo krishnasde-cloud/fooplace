@@ -1,4 +1,5 @@
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/react";
+import "./AuthHeader.css";
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 from fooplace.database import databases
+from modules.discovery import iter_module_names
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -42,7 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
-    "api",
+    "modules",
+    *iter_module_names(),
 ]
 
 MIDDLEWARE = [
@@ -53,14 +55,14 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     # Clerk is the only auth. This overwrites session users on every request.
-    "api.clerk_auth.ClerkAuthenticationMiddleware",
+    "modules.clerk.clerk_auth.ClerkAuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 # Clerk session tokens only — no ModelBackend / password / session login.
 AUTHENTICATION_BACKENDS = [
-    "api.clerk_auth.ClerkBackend",
+    "modules.clerk.clerk_auth.ClerkBackend",
 ]
 
 
