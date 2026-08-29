@@ -49,7 +49,7 @@ def databases(*, base_dir: Path) -> dict[str, dict[str, Any]]:
     """Postgres is the application database.
 
     Set FOOPLACE_USE_SQLITE=1 for hermetic unit tests (Bazel) that should not
-    need a running Postgres. DATABASE_URL wins over discrete POSTGRES_* vars.
+    need a running Postgres. DATABASE_URL (Neon/Vercel) wins over POSTGRES_* vars.
     """
     if os.environ.get("FOOPLACE_USE_SQLITE") == "1":
         return {"default": sqlite_default(base_dir)}

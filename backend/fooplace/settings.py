@@ -12,13 +12,27 @@ SECRET_KEY = os.environ.get(
     "django-insecure-fooplace-dev-only-change-me",
 )
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in {"1", "true", "yes"}
+_ON_VERCEL = bool(os.environ.get("VERCEL"))
+_debug_default = "false" if _ON_VERCEL else "true"
+DEBUG = os.environ.get("DJANGO_DEBUG", _debug_default).lower() in {"1", "true", "yes"}
 
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]").split(",")
     if host.strip()
 ]
+if _ON_VERCEL:
+    ALLOWED_HOSTS = ["*"]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if _ON_VERCEL:
+    CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")
+    if os.environ.get("VERCEL_URL"):
+        CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['VERCEL_URL']}")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -76,6 +90,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
