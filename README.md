@@ -43,9 +43,13 @@ Deploys are **manual**. GitHub Actions does not publish on push.
 
 1. Open **Actions → Deploy to Vercel → Run workflow**.
 2. Leave **Deploy to production** checked for the production domain, or uncheck it for a preview URL.
-3. Run the workflow. It builds `//frontend:bundle` with Bazel, copies the output out of `bazel-bin` (following symlinks), and uploads `dist/` with the Vercel CLI.
+3. Run the workflow. It:
+   - builds `//frontend:bundle` and copies it to `public/` (SPA at `/`)
+   - pulls Vercel env (Neon `DATABASE_URL`)
+   - on production, runs `bazel run //backend:manage -- migrate --noinput`
+   - deploys Django via Vercel’s Python runtime (`backend/manage.py` / `fooplace.wsgi`)
 
-Credentials live in the GitHub Environment **Vercel-prod** (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). The Vercel project is already linked to the Neon production database; this workflow only ships the static React app. Django is not hosted on Vercel.
+Credentials live in the GitHub Environment **Vercel-prod** (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). The Vercel project is already linked to the Neon production database. Django reads `DATABASE_URL` and falls back to SQLite locally.
 
 ## Refreshing Python locks
 

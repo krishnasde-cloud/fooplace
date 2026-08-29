@@ -1,4 +1,4 @@
-# Manual production/preview deploy of the Bazel-built React SPA to Vercel.
+# Manual deploy of the Bazel-built React SPA + Django (Vercel Python runtime).
 # Does not run on push or pull request — open Actions → Deploy to Vercel → Run workflow.
 name: Deploy to Vercel
 
@@ -43,16 +43,50 @@ jobs:
       - name: Build frontend
         run: bazel build //frontend:bundle
 
-      - name: Stage static output
+      - name: Stage SPA into public/
         run: |
-          mkdir -p dist
+          rm -rf public
+          mkdir -p public
           bin="$(bazel info bazel-bin)"
           # Follow Bazel symlinks so the upload contains real files, not the sandbox farm.
-          cp -aL "${bin}/frontend/dist/." dist/
-          test -f dist/index.html
+          cp -aL "${bin}/frontend/dist/." public/
+          chmod -R u+w public
+          test -f public/index.html
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment
+        run: |
+          if [ "${{ inputs.production }}" = "true" ]; then
+            vercel pull --yes --environment=production
+          else
+            vercel pull --yes --environment=preview
+          fi
+
+      - name: Migrate Neon (production only)
+        if: ${{ inputs.production }}
+        run: |
+          env_file=""
+          for f in .vercel/.env.production.local .env.local; do
+            if [ -f "$f" ]; then
+              env_file="$f"
+              break
+            fi
+          done
+          if [ -z "$env_file" ]; then
+            echo "No Vercel env file after pull; cannot migrate." >&2
+            exit 1
+          fi
+          set -a
+          # shellcheck disable=SC1090
+          . "$env_file"
+          set +a
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "DATABASE_URL is not set on the Vercel project." >&2
+            exit 1
+          fi
+          bazel run //backend:manage -- migrate --noinput
 
       - name: Deploy to Vercel
         id: deploy
@@ -61,7 +95,7 @@ jobs:
           if [ "${{ inputs.production }}" = "true" ]; then
             extra+=(--prod)
           fi
-          url="$(vercel deploy dist --yes "${extra[@]}")"
+          url="$(vercel deploy --yes "${extra[@]}")"
           echo "url=${url}" >> "${GITHUB_OUTPUT}"
           {
             echo "## Deployed"

@@ -8,8 +8,10 @@
 # Node
 node_modules
 dist
+public
 .vite-work
 *.local
+.vercel
 
 # Python
 __pycache__/
@@ -20,6 +22,7 @@ __pycache__/
 
 # Django
 backend/db.sqlite3
+backend/staticfiles/
 *.sqlite3
 
 # OS / editors
