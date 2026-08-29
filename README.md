@@ -106,7 +106,7 @@ Django runs on Vercel, so these are project env vars (not frontend-only):
 | --- | --- | --- |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite inlines `VITE_*` at **build** time (the deploy workflow pulls it from Vercel before Bazel runs). |
 | `CLERK_SECRET_KEY` | Yes | Server-only. Django uses this to verify session JWTs. Never expose to the browser. |
-| `CLERK_AUTHORIZED_PARTIES` | Already set | Comma-separated frontend origins for the token `azp` claim. Preview deploys also include `https://$VERCEL_URL`. |
+| `CLERK_AUTHORIZED_PARTIES` | Already set | Comma-separated frontend origins for the token `azp` claim. Django also allows `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, and the request Origin/Host so the production alias matches. |
 | `CLERK_JWT_KEY` | No | Optional PEM public key for networkless JWT verification. |
 
 Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 from fooplace.database import databases
+from modules.clerk.authorized_parties import vercel_frontend_origins
 from modules.discovery import iter_module_names
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +25,7 @@ ALLOWED_HOSTS = [
 ]
 if _ON_VERCEL:
     ALLOWED_HOSTS = ["*"]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
@@ -32,8 +34,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 if _ON_VERCEL:
     CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")
-    if os.environ.get("VERCEL_URL"):
-        CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['VERCEL_URL']}")
+    for origin in vercel_frontend_origins():
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -79,15 +82,14 @@ CLERK_SECRET_KEY = os.environ.get("CLERK_SECRET_KEY", "")
 # Optional PEM public key for networkless verification (Dashboard → API keys).
 CLERK_JWT_KEY = os.environ.get("CLERK_JWT_KEY") or None
 # Frontend origins allowed in the session token azp claim.
-# CLERK_AUTHORIZED_PARTIES is already set on Vercel; local default is Vite.
+# Include every Vercel host (unique deploy URL + production / branch aliases).
 CLERK_AUTHORIZED_PARTIES = _csv_env(
     "CLERK_AUTHORIZED_PARTIES",
     "http://localhost:5173,http://127.0.0.1:5173",
 )
-if os.environ.get("VERCEL_URL"):
-    vercel_origin = f"https://{os.environ['VERCEL_URL']}"
-    if vercel_origin not in CLERK_AUTHORIZED_PARTIES:
-        CLERK_AUTHORIZED_PARTIES.append(vercel_origin)
+for origin in vercel_frontend_origins():
+    if origin not in CLERK_AUTHORIZED_PARTIES:
+        CLERK_AUTHORIZED_PARTIES.append(origin)
 
 ROOT_URLCONF = "fooplace.urls"
 
@@ -141,3 +143,6 @@ CORS_ALLOWED_ORIGINS = [
     ).split(",")
     if origin.strip()
 ]
+for origin in vercel_frontend_origins():
+    if origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(origin)

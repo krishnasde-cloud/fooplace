@@ -17,6 +17,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
+from modules.clerk.authorized_parties import merge_authorized_parties
 from modules.users.models import User
 from modules.users.user_sync import link_clerk_user
 
@@ -61,7 +62,7 @@ class ClerkBackend:
 
 
 def verify_clerk_request(request) -> RequestState:
-    parties = list(settings.CLERK_AUTHORIZED_PARTIES)
+    parties = merge_authorized_parties(list(settings.CLERK_AUTHORIZED_PARTIES), request)
     return authenticate_request(
         request,
         AuthenticateRequestOptions(
