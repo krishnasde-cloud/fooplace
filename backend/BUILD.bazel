@@ -17,6 +17,10 @@ py_library(
             "**/__pycache__/**",
         ],
     ),
+    data = glob(
+        ["**/*.html"],
+        allow_empty = True,
+    ),
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [

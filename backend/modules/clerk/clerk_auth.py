@@ -43,9 +43,21 @@ class ClerkUser:
         self.pk = self.id
         if self.record is not None:
             self.is_active = self.record.is_active
+            is_admin = self.record.is_admin
+            self.is_staff = is_admin
+            self.is_superuser = is_admin
 
     def get_username(self) -> str:
         return self.id
+
+    def has_perm(self, perm, obj=None) -> bool:
+        return self.is_active and self.is_superuser
+
+    def has_perms(self, perm_list, obj=None) -> bool:
+        return all(self.has_perm(perm, obj) for perm in perm_list)
+
+    def has_module_perms(self, app_label) -> bool:
+        return self.is_active and self.is_superuser
 
     def __str__(self) -> str:
         return self.id

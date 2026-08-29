@@ -10,6 +10,7 @@ class User(models.Model):
     class UserType(models.TextChoices):
         BUYER = "buyer", "Buyer"
         SELLER = "seller", "Seller"
+        ADMIN = "admin", "Admin"
 
     user_id = models.CharField(max_length=64, unique=True)
     email = models.EmailField(blank=True)
@@ -26,6 +27,10 @@ class User(models.Model):
 
     def __str__(self) -> str:
         return self.email or self.user_id
+
+    @property
+    def is_admin(self) -> bool:
+        return self.user_type == self.UserType.ADMIN
 
     def as_api(self) -> dict:
         raw = {

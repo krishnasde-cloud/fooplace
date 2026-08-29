@@ -5,7 +5,7 @@ type MeResponse = {
   user_id: string;
   email: string;
   connected_using: string;
-  type: "buyer" | "seller";
+  type: "buyer" | "seller" | "admin";
   is_active: boolean;
   is_verified: boolean;
   first_logged_in: string;

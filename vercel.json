@@ -10,6 +10,10 @@
   },
   "routes": [
     {
+      "src": "/admin(?:/(.*))?",
+      "dest": "/api"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api",
       "transforms": [

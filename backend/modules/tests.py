@@ -16,6 +16,7 @@ class DiscoveryTests(SimpleTestCase):
         self.assertIn("modules.health", names)
         self.assertIn("modules.clerk", names)
         self.assertIn("modules.users", names)
+        self.assertIn("modules.admin_flow", names)
         self.assertNotIn("modules.management", names)
 
 
