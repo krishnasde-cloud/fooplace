@@ -1,0 +1,29 @@
+# Bazel
+/bazel-*
+/bazel-bin
+/bazel-out
+/bazel-testlogs
+/bazel-fooplace
+
+# Node
+node_modules
+dist
+.vite-work
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Django
+backend/db.sqlite3
+*.sqlite3
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp

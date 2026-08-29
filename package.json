@@ -1,0 +1,9 @@
+{
+  "name": "fooplace",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "frontend:dev": "pnpm --filter @fooplace/frontend dev",
+    "frontend:build": "pnpm --filter @fooplace/frontend build"
+  }
+}

@@ -1,0 +1,42 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+
+compile_pip_requirements(
+    name = "requirements",
+    src = "requirements.in",
+    requirements_txt = "requirements_lock.txt",
+)
+
+py_library(
+    name = "backend_lib",
+    srcs = glob(
+        ["**/*.py"],
+        exclude = [
+            "manage.py",
+            "run_tests.py",
+            "**/__pycache__/**",
+        ],
+    ),
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@fooplace_pypi//django",
+        "@fooplace_pypi//django_cors_headers",
+    ],
+)
+
+py_binary(
+    name = "manage",
+    srcs = ["manage.py"],
+    main = "manage.py",
+    visibility = ["//visibility:public"],
+    deps = [":backend_lib"],
+)
+
+py_test(
+    name = "test",
+    srcs = ["run_tests.py"],
+    main = "run_tests.py",
+    size = "small",
+    deps = [":backend_lib"],
+)
