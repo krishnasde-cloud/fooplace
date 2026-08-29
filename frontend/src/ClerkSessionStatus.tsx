@@ -13,8 +13,6 @@ export function ClerkSessionStatus() {
 
   useEffect(() => {
     if (!isSignedIn) {
-      setMe(null);
-      setMeError(null);
       return;
     }
 
