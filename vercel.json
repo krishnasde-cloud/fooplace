@@ -4,8 +4,14 @@
     "deploymentEnabled": false
   },
   "functions": {
-    "backend/fooplace/wsgi.py": {
+    "api/index.py": {
       "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api"
+    }
+  ]
 }

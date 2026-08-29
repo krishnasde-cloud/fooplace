@@ -47,7 +47,7 @@ Deploys are **manual**. GitHub Actions does not publish on push.
    - builds `//frontend:bundle` and copies it to `public/` (SPA at `/`)
    - pulls Vercel env (Neon `DATABASE_URL`)
    - on production, runs `bazel run //backend:manage -- migrate --noinput`
-   - deploys Django via Vercel’s Python runtime (`backend/manage.py` / `fooplace.wsgi`)
+   - deploys Django as a Vercel Function at `api/index.py` (SPA stays in `public/`)
 
 Credentials live in the GitHub Environment **Vercel-prod** (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`). The Vercel project is already linked to the Neon production database. Django reads `DATABASE_URL` and falls back to SQLite locally.
 ## Clerk auth
