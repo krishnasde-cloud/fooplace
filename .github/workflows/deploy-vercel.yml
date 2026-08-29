@@ -21,7 +21,7 @@ concurrency:
 jobs:
   deploy:
     name: Build and deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: Vercel-prod
       url: ${{ steps.deploy.outputs.url }}
@@ -30,6 +30,11 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
       - name: Check out
         uses: actions/checkout@v5
 
