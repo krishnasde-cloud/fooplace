@@ -79,13 +79,17 @@ def _csv_env(name: str, default: str = "") -> list[str]:
 
 # Required on Vercel (Django runs there) and locally to verify session JWTs.
 CLERK_SECRET_KEY = os.environ.get("CLERK_SECRET_KEY", "")
+# Used by /admin/ so admins can sign in with Clerk on the Django host.
+CLERK_PUBLISHABLE_KEY = os.environ.get("CLERK_PUBLISHABLE_KEY") or os.environ.get(
+    "VITE_CLERK_PUBLISHABLE_KEY", ""
+)
 # Optional PEM public key for networkless verification (Dashboard → API keys).
 CLERK_JWT_KEY = os.environ.get("CLERK_JWT_KEY") or None
 # Frontend origins allowed in the session token azp claim.
 # Include every Vercel host (unique deploy URL + production / branch aliases).
 CLERK_AUTHORIZED_PARTIES = _csv_env(
     "CLERK_AUTHORIZED_PARTIES",
-    "http://localhost:5173,http://127.0.0.1:5173",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000",
 )
 for origin in vercel_frontend_origins():
     if origin not in CLERK_AUTHORIZED_PARTIES:
@@ -125,7 +129,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = Path(os.environ.get("DJANGO_STATIC_ROOT", str(BASE_DIR / "staticfiles")))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

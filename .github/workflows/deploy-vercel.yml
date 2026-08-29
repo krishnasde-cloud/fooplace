@@ -93,6 +93,13 @@ jobs:
           chmod -R u+w public
           test -f public/index.html
 
+      - name: Collect Django admin static files
+        run: |
+          mkdir -p /tmp/fooplace-static public/static
+          DJANGO_STATIC_ROOT=/tmp/fooplace-static bazel run //backend:manage -- collectstatic --noinput
+          cp -a /tmp/fooplace-static/. public/static/
+          chmod -R u+w public/static
+
       - name: Migrate Neon (production only)
         if: ${{ inputs.production }}
         run: |

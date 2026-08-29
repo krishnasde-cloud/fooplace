@@ -40,12 +40,29 @@ class ClerkUser:
     is_superuser: bool = False
 
     def __post_init__(self) -> None:
-        self.pk = self.id
+        self.pk = self.record.pk if self.record is not None else self.id
         if self.record is not None:
             self.is_active = self.record.is_active
+            is_admin = self.record.is_admin
+            self.is_staff = is_admin
+            self.is_superuser = is_admin
 
     def get_username(self) -> str:
+        if self.record is not None and self.record.email:
+            return self.record.email
         return self.id
+
+    def get_short_name(self) -> str:
+        return self.get_username()
+
+    def has_perm(self, perm, obj=None) -> bool:
+        return self.is_active and self.is_superuser
+
+    def has_perms(self, perm_list, obj=None) -> bool:
+        return all(self.has_perm(perm, obj) for perm in perm_list)
+
+    def has_module_perms(self, app_label) -> bool:
+        return self.is_active and self.is_superuser
 
     def __str__(self) -> str:
         return self.id

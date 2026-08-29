@@ -47,12 +47,18 @@ class DjangoPathInfoTests(SimpleTestCase):
                 "prefers_specific_over_function_root": django_path_info(
                     {"PATH_INFO": "/api/health/", "REQUEST_URI": "/api"}
                 ),
+                "admin_rewritten": django_path_info(
+                    {"PATH_INFO": "/api", "REQUEST_URI": "/admin/"}
+                ),
+                "admin_direct": django_path_info({"PATH_INFO": "/admin/users/user/"}),
             },
             {
                 "full": "/api/health/",
                 "rewritten": "/api/health/",
                 "stripped": "/api/health/",
                 "prefers_specific_over_function_root": "/api/health/",
+                "admin_rewritten": "/admin/",
+                "admin_direct": "/admin/users/user/",
             },
         )
 

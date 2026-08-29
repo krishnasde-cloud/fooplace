@@ -74,6 +74,16 @@ pnpm --filter @fooplace/frontend dev
 
 The SPA calls `GET /api/health/`. With both servers running, Vite proxies that path to Django.
 
+## Django admin
+
+`/admin/` is limited to Fooplace users with `type=admin`. Sign in with Clerk (password login stays disabled). New sign-ups stay buyers. After someone has signed in once, promote them:
+
+```bash
+bazel run //backend:manage -- promoteadmin you@example.com
+```
+
+Locally open http://localhost:8000/admin/. On Vercel the same path is routed to Django. Admins can view and edit every model registered from `backend/modules/`.
+
 ## Deploy to Vercel
 
 Deploys are **manual**. GitHub Actions does not publish on push.
@@ -106,7 +116,8 @@ Django runs on Vercel, so these are project env vars (not frontend-only):
 | --- | --- | --- |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Public key from [Clerk → API keys](https://dashboard.clerk.com/last-active?path=api-keys). Vite inlines `VITE_*` at **build** time (the deploy workflow pulls it from Vercel before Bazel runs). |
 | `CLERK_SECRET_KEY` | Yes | Server-only. Django uses this to verify session JWTs. Never expose to the browser. |
-| `CLERK_AUTHORIZED_PARTIES` | Already set | Comma-separated frontend origins for the token `azp` claim. Django also allows `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, and the request Origin/Host so the production alias matches. |
+| `CLERK_AUTHORIZED_PARTIES` | Already set | Comma-separated frontend origins for the token `azp` claim. Django also allows `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, and the request Origin/Host so the production alias matches. Include the Django origin (`http://localhost:8000`) if you sign in on `/admin/`. |
+| `CLERK_PUBLISHABLE_KEY` | No | Optional. Django admin login embeds Clerk when this (or `VITE_CLERK_PUBLISHABLE_KEY`) is set. |
 | `CLERK_JWT_KEY` | No | Optional PEM public key for networkless JWT verification. |
 
 Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.
