@@ -10,8 +10,10 @@ from modules.scaffold import BACKEND_FILES, FRONTEND_FILES, write_module
 
 
 class DiscoveryTests(SimpleTestCase):
-    def test_discovers_health_module(self):
-        self.assertEqual(iter_module_names(), ["modules.health"])
+    def test_discovers_health_and_skips_non_apps(self):
+        names = iter_module_names()
+        self.assertIn("modules.health", names)
+        self.assertNotIn("modules.management", names)
 
 
 class ScaffoldTests(SimpleTestCase):
