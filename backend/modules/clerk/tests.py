@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from clerk_backend_api.security.types import (
@@ -10,6 +11,11 @@ from clerk_backend_api.security.types import (
 from django.contrib.auth import authenticate
 from django.test import RequestFactory, TestCase, override_settings
 
+from modules.clerk.authorized_parties import (
+    merge_authorized_parties,
+    request_frontend_origins,
+    vercel_frontend_origins,
+)
 from modules.clerk.clerk_auth import verify_clerk_request
 from modules.users.models import User
 
@@ -65,7 +71,10 @@ class ClerkAuthTests(TestCase):
             status=AuthStatus.SIGNED_OUT,
             reason=AuthErrorReason.SESSION_TOKEN_MISSING,
         )
-        verify_clerk_request(RequestFactory().get("/api/me/"))
+        factory_request = RequestFactory().get(
+            "/api/me/", HTTP_ORIGIN="https://project-7tqn4.vercel.app"
+        )
+        verify_clerk_request(factory_request)
         request, options = mock_authenticate.call_args.args
         self.assertEqual(request.path, "/api/me/")
         self.assertEqual(
@@ -73,7 +82,67 @@ class ClerkAuthTests(TestCase):
             AuthenticateRequestOptions(
                 secret_key="sk_test",
                 jwt_key=None,
-                authorized_parties=["https://fooplace.example"],
+                authorized_parties=[
+                    "https://fooplace.example",
+                    "https://project-7tqn4.vercel.app",
+                    "http://testserver",
+                ],
                 accepts_token=["session_token"],
             ),
+        )
+
+
+class AuthorizedPartiesTests(TestCase):
+    def test_vercel_hosts_include_production_alias(self):
+        self.assertEqual(
+            vercel_frontend_origins(
+                {
+                    "VERCEL_URL": "project-7tqn4-awtxdckm0-k-corpp.vercel.app",
+                    "VERCEL_PROJECT_PRODUCTION_URL": "project-7tqn4.vercel.app",
+                    "VERCEL_BRANCH_URL": "project-7tqn4-git-main-k-corpp.vercel.app",
+                }
+            ),
+            [
+                "https://project-7tqn4-awtxdckm0-k-corpp.vercel.app",
+                "https://project-7tqn4-git-main-k-corpp.vercel.app",
+                "https://project-7tqn4.vercel.app",
+            ],
+        )
+
+    def test_request_origin_covers_production_alias(self):
+        request = RequestFactory().get(
+            "/api/me/",
+            HTTP_ORIGIN="https://project-7tqn4.vercel.app",
+        )
+        configured = [
+            "http://localhost:5173",
+            "https://project-7tqn4-awtxdckm0-k-corpp.vercel.app",
+        ]
+        self.assertEqual(
+            {
+                "from_request": request_frontend_origins(request),
+                "merged": merge_authorized_parties(configured, request),
+            },
+            {
+                "from_request": [
+                    "https://project-7tqn4.vercel.app",
+                    "http://testserver",
+                ],
+                "merged": [
+                    "http://localhost:5173",
+                    "https://project-7tqn4-awtxdckm0-k-corpp.vercel.app",
+                    "https://project-7tqn4.vercel.app",
+                    "http://testserver",
+                ],
+            },
+        )
+
+    @patch.dict(os.environ, {"VERCEL": "1"})
+    def test_vercel_request_host_uses_https(self):
+        request = RequestFactory().get(
+            "/api/me/", HTTP_HOST="project-7tqn4.vercel.app"
+        )
+        self.assertEqual(
+            request_frontend_origins(request),
+            ["https://project-7tqn4.vercel.app"],
         )

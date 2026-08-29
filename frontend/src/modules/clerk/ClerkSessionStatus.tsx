@@ -36,10 +36,19 @@ export function ClerkSessionStatus() {
         });
       })
       .then(async (response) => {
+        const payload = await response.json().catch(() => null);
         if (!response.ok) {
-          throw new Error(`Backend returned HTTP ${response.status}`);
+          const detail =
+            payload && typeof payload === "object" && "detail" in payload
+              ? String(payload.detail)
+              : "";
+          throw new Error(
+            detail
+              ? `Backend returned HTTP ${response.status}: ${detail}`
+              : `Backend returned HTTP ${response.status}`,
+          );
         }
-        return (await response.json()) as MeResponse;
+        return payload as MeResponse;
       })
       .then((payload) => {
         setMe(payload);
