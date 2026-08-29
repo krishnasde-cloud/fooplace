@@ -10,8 +10,27 @@ Bazel monorepo for Fooplace: a **React 19** frontend and a **Django 6.1** backen
 | `backend/` | Django project (`fooplace`) with an `api` app |
 | `MODULE.bazel` | Bzlmod deps: Bazel 9.2, `aspect_rules_js` 3.4.1, `rules_python` 2.3.2 |
 
+## Local Docker environment
+
+Postgres, Django, and the Vite frontend run together:
+
+```bash
+docker compose up --build
+```
+
+| Service | URL |
+| --- | --- |
+| Frontend (Vite) | http://localhost:5173 |
+| Backend (Django) | http://localhost:8000/api/health/ |
+| Postgres | `localhost:5432` (user/password/db: `fooplace`) |
+
+The app uses **PostgreSQL**. Cursor Cloud Agents start this same stack from `.cursor/environment.json`. Deployment databases (for example Neon) are configured separately.
+
+Copy `.env.example` to `.env` only if you want to override the defaults.
+
 ## Prerequisites
 
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose (for the local stack above)
 - [Bazelisk](https://github.com/bazelbuild/bazelisk) (pins Bazel **9.2.0** via `.bazelversion`)
 - Optional for local JS iteration: Node.js 22+ and [pnpm 10.34.5](https://pnpm.io/)
 

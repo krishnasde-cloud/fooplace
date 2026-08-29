@@ -22,6 +22,11 @@ __pycache__/
 backend/db.sqlite3
 *.sqlite3
 
+# Local env files
+.env
+.env.*
+!.env.example
+
 # OS / editors
 .DS_Store
 .idea/

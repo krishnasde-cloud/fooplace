@@ -1,8 +1,9 @@
 """Django 6.1 settings for the fooplace backend."""
 
 import os
-import tempfile
 from pathlib import Path
+
+from fooplace.database import databases
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -60,15 +61,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "fooplace.wsgi.application"
 
-_default_db_dir = BASE_DIR if os.access(BASE_DIR, os.W_OK) else Path(tempfile.gettempdir()) / "fooplace"
-_default_db_dir.mkdir(parents=True, exist_ok=True)
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("FOOPLACE_DB", str(_default_db_dir / "db.sqlite3")),
-    }
-}
+DATABASES = databases(base_dir=BASE_DIR)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

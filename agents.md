@@ -1,5 +1,7 @@
 # Agent guidelines
 
+- The local stack is Docker Compose: Postgres, Django (`:8000`), and Vite (`:5173`). Run `docker compose up --build` (Cloud Agents already start it via `.cursor/start.sh`).
+- Application code talks to PostgreSQL. Hermetic Bazel tests set `FOOPLACE_USE_SQLITE=1` so they do not need a running database.
 - Always make sure to work in small chunks, always prefer using smaller agents to save money.
 - Never change test to pass it
 - Always keep the code as simple as possible, think a new engineer will need to understand it
