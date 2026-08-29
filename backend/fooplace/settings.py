@@ -4,6 +4,8 @@ import os
 import tempfile
 from pathlib import Path
 
+from modules.discovery import iter_module_names
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get(
@@ -27,7 +29,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
-    "api",
+    "modules",
+    *iter_module_names(),
 ]
 
 MIDDLEWARE = [
