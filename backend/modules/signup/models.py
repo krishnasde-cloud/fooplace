@@ -9,6 +9,7 @@ class SellerProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="seller_profile",
     )
+    neighbourhood = models.CharField(max_length=80, blank=True)
     has_food_handler_certification = models.BooleanField(default=False)
     accepted_terms = models.BooleanField(default=False)
     facebook_marketplace_url = models.URLField(max_length=500)
@@ -16,6 +17,7 @@ class SellerProfile(models.Model):
 
     def as_api(self) -> dict:
         return {
+            "neighbourhood": self.neighbourhood,
             "has_food_handler_certification": self.has_food_handler_certification,
             "accepted_terms": self.accepted_terms,
             "facebook_marketplace_url": self.facebook_marketplace_url,
