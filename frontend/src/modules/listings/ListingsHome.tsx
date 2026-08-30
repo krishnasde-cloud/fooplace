@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/react";
 import { useEffect, useMemo, useState } from "react";
 import { loadPendingSignup } from "@/modules/signup/pending.ts";
 import { BuyerNotifications, IncomingOrders } from "@/modules/orders/index.ts";
+import { apiOrderSource, localSource as localOrders } from "@/modules/orders/local.ts";
 import { apiSource, publicBrowse } from "./api.ts";
 import { localSource } from "./local.ts";
 import { MarketplaceBrowse } from "./MarketplaceBrowse.tsx";
@@ -22,9 +23,15 @@ export function ListingsHome() {
 
 function LocalListingsHome() {
   const source = useMemo(() => localSource(), []);
+  const orders = useMemo(() => localOrders(), []);
   const seller = loadPendingSignup()?.type === "seller";
   if (seller) {
-    return <SellerDashboard source={source} />;
+    return (
+      <>
+        <IncomingOrders source={orders} />
+        <SellerDashboard source={source} />
+      </>
+    );
   }
   return <MarketplaceBrowse source={source} />;
 }
@@ -75,6 +82,7 @@ function ClerkListingsHome() {
   }, [getToken, isSignedIn]);
 
   const source = useMemo(() => (token ? apiSource(token) : null), [token]);
+  const orderSource = useMemo(() => apiOrderSource(token), [token]);
   const isSeller = me?.type === "seller" || me?.type === "admin";
 
   if (error) {
@@ -87,7 +95,7 @@ function ClerkListingsHome() {
   if (isSignedIn && isSeller && source) {
     return (
       <>
-        <IncomingOrders token={token} />
+        <IncomingOrders source={orderSource} />
         <SellerDashboard source={source} />
       </>
     );

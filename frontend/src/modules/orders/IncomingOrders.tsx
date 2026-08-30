@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { confirmOrder, fetchIncoming } from "./api.ts";
+import type { OrderSource } from "./local.ts";
 import type { SellerOrder } from "./types.ts";
 import "../listings/SellerDashboard.css";
 import "./IncomingOrders.css";
 
 type IncomingOrdersProps = {
-  token: string;
+  source: OrderSource;
 };
 
 function statusLabel(status: SellerOrder["status"]): string {
@@ -41,7 +41,7 @@ function remainingLabel(confirmBy: string): string {
   return `${hours}h ${minutes}m left to confirm`;
 }
 
-export function IncomingOrders({ token }: IncomingOrdersProps) {
+export function IncomingOrders({ source }: IncomingOrdersProps) {
   const [orders, setOrders] = useState<SellerOrder[]>([]);
   const [hours, setHours] = useState(4);
   const [checked, setChecked] = useState<Record<number, boolean>>({});
@@ -50,7 +50,8 @@ export function IncomingOrders({ token }: IncomingOrdersProps) {
   const [busyId, setBusyId] = useState<number | null>(null);
 
   function refresh() {
-    return fetchIncoming(token)
+    return source
+      .incoming()
       .then((body) => {
         setOrders(body.orders);
         setHours(body.confirm_hours);
@@ -64,12 +65,12 @@ export function IncomingOrders({ token }: IncomingOrdersProps) {
 
   useEffect(() => {
     void refresh();
-  }, [token]);
+  }, [source]);
 
   async function onConfirm(order: SellerOrder) {
     setBusyId(order.id);
     try {
-      await confirmOrder(token, order.id);
+      await source.confirm(order.id);
       await refresh();
     } catch (confirmError: unknown) {
       setError(confirmError instanceof Error ? confirmError.message : "Could not confirm order.");
