@@ -1,0 +1,100 @@
+.listing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(100%, 28rem);
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  text-align: left;
+}
+
+.listing-form h1 {
+  font-size: 32px;
+  letter-spacing: -0.8px;
+  margin: 0;
+}
+
+.listing-form p {
+  color: var(--text);
+}
+
+.listing-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-h);
+  font-size: 15px;
+}
+
+.listing-form input,
+.listing-form textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.listing-form textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.listing-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.listing-photo-preview {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--code-bg);
+}
+
+.listing-hint {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.listing-error {
+  color: var(--err);
+  font-size: 15px;
+}
+
+.listing-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.listing-submit,
+.listing-cancel {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.listing-submit {
+  color: #fff;
+  background: #6c47ff;
+  border: 1px solid transparent;
+}
+
+.listing-cancel {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.listing-submit:disabled,
+.listing-cancel:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

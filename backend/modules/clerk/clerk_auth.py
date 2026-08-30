@@ -25,6 +25,19 @@ from modules.users.user_sync import link_clerk_user
 PUBLIC_API_PATHS = frozenset({"/api/health/", "/api/health"})
 
 
+def is_public_api(request) -> bool:
+    """Health plus anonymous browse of active listings (not /mine/ or writes)."""
+    if request.path in PUBLIC_API_PATHS:
+        return True
+    if request.method != "GET":
+        return False
+    path = request.path.rstrip("/")
+    if path == "/api/listings":
+        return True
+    rest = path.removeprefix("/api/listings/")
+    return rest != path and rest.isdigit()
+
+
 @dataclass
 class ClerkUser:
     """Minimal request.user backed by a verified Clerk session token."""
@@ -123,10 +136,7 @@ class ClerkAuthenticationMiddleware(MiddlewareMixin):
         if not request.path.startswith("/api/"):
             return None
 
-        if (
-            request.path in PUBLIC_API_PATHS
-            and state.reason is AuthErrorReason.SESSION_TOKEN_MISSING
-        ):
+        if is_public_api(request) and state.reason is AuthErrorReason.SESSION_TOKEN_MISSING:
             return None
 
         return _unauthorized(state)
