@@ -8,35 +8,58 @@ export type Route =
   | { page: "order"; id: number }
   | { page: "seller"; id: number | "local" };
 
-export function parseHash(hash: string): Route {
-  const path = hash.replace(/^#/, "") || "/";
-  const listing = path.match(/^\/listings\/(\d+)\/?$/);
+export const paths = {
+  browse: "/",
+  listing: (id: number) => `/listings/${id}/`,
+  seller: (id: number | "local") => `/sellers/${id}/`,
+  sell: "/sell",
+  orders: "/orders",
+  order: (id: number) => `/orders/${id}/`,
+};
+
+export function parsePath(path: string): Route {
+  const normalized = path.replace(/^#/, "") || "/";
+  const listing = normalized.match(/^\/listings\/(\d+)\/?$/);
   if (listing) {
     return { page: "listing", id: Number(listing[1]) };
   }
-  const seller = path.match(/^\/sellers\/(\d+|local)\/?$/);
+  const seller = normalized.match(/^\/sellers\/(\d+|local)\/?$/);
   if (seller) {
     return { page: "seller", id: seller[1] === "local" ? "local" : Number(seller[1]) };
   }
-  const order = path.match(/^\/orders\/(\d+)\/?$/);
+  const order = normalized.match(/^\/orders\/(\d+)\/?$/);
   if (order) {
     return { page: "order", id: Number(order[1]) };
   }
-  if (path === "/orders" || path === "/orders/") {
+  if (normalized === "/orders" || normalized === "/orders/") {
     return { page: "orders" };
   }
-  if (path === "/sell" || path === "/sell/") {
+  if (normalized === "/sell" || normalized === "/sell/") {
     return { page: "sell" };
   }
   return { page: "browse" };
 }
 
-export function useHashRoute(): Route {
-  const [hash, setHash] = useState(() => window.location.hash);
+export function isPublicRoute(route: Route): boolean {
+  return route.page === "browse" || route.page === "listing" || route.page === "seller";
+}
+
+function currentPath(): string {
+  if (window.location.hash.startsWith("#/")) {
+    return window.location.hash.slice(1).split("?")[0] || "/";
+  }
+  return window.location.pathname || "/";
+}
+
+export function useRoute(): Route {
+  const [path, setPath] = useState(currentPath);
   useEffect(() => {
-    const onChange = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", onChange);
-    return () => window.removeEventListener("hashchange", onChange);
+    if (window.location.hash.startsWith("#/")) {
+      window.history.replaceState(null, "", window.location.hash.slice(1));
+    }
+    const onPop = () => setPath(currentPath());
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
-  return parseHash(hash);
+  return parsePath(path);
 }

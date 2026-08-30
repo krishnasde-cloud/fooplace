@@ -12,7 +12,7 @@ export function OrderStatus({ id }: { id: number }) {
   if (!publishableKey) {
     return (
       <section className="order-status">
-        <a className="listing-back" href="#/orders">
+        <a className="listing-back" href="/orders">
           ← My orders
         </a>
         <p>Sign in to view this order.</p>
@@ -81,7 +81,7 @@ function ClerkOrderStatus({ id }: { id: number }) {
 
   return (
     <section className="order-status">
-      <a className="listing-back" href="#/orders">
+      <a className="listing-back" href="/orders">
         ← My orders
       </a>
       {error ? <p className="order-error">{error}</p> : null}
@@ -130,7 +130,7 @@ function ClerkOrderStatus({ id }: { id: number }) {
           ) : null}
           {order.seller_id ? (
             <p>
-              <a href={`#/sellers/${order.seller_id}`}>View seller profile</a>
+              <a href={`/sellers/${order.seller_id}/`}>View seller profile</a>
             </p>
           ) : null}
         </>

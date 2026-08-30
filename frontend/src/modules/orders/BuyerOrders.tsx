@@ -76,7 +76,7 @@ function ClerkBuyerOrders() {
         <ul className="order-list">
           {orders.map((order) => (
             <li key={order.id}>
-              <a className="order-card" href={`#/orders/${order.id}`}>
+              <a className="order-card" href={`/orders/${order.id}/`}>
                 <strong>{order.dish_name}</strong>
                 <span>
                   {STATUS_LABEL[order.status]} · {money(order.deposit_amount)} deposit

@@ -1,0 +1,22 @@
+{% extends "seo/base.html" %}
+{% block content %}
+<section class="listing-detail">
+  <a class="listing-back" href="/">← Browse listings</a>
+  <h1>{{ listing.dish_name }}</h1>
+  <p>{{ listing.description }}</p>
+  <dl class="listing-facts">
+    <dt>Price</dt>
+    <dd>${{ listing.price }}</dd>
+    <dt>Seller</dt>
+    <dd>
+      <a href="/sellers/{{ listing.seller_id }}/">{{ listing.seller.display_name }}</a>
+    </dd>
+    <dt>Cuisine</dt>
+    <dd>{{ listing.cuisine }}</dd>
+    <dt>Pickup neighbourhood</dt>
+    <dd>{{ listing.neighbourhood }}</dd>
+    <dt>Available</dt>
+    <dd>{% if listing.is_sold_out %}Sold out{% else %}{{ listing.quantity_available }} left{% endif %}</dd>
+  </dl>
+</section>
+{% endblock %}

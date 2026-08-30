@@ -76,7 +76,7 @@ export function MarketplaceBrowse({
                   onOpen={
                     onOpenSeller ??
                     ((sellerId) => {
-                      window.location.hash = `#/sellers/${sellerId}`;
+                      window.location.assign(`/sellers/${sellerId}/`);
                     })
                   }
                 />

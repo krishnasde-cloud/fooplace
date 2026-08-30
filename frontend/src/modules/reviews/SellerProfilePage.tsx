@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { paths } from "@/app/route.ts";
+import { usePublicSeo } from "@/modules/seo/index.ts";
 import { formatJoined, formatRating, TrustSignals } from "./TrustSignals.tsx";
 import type { ReviewsSource, SellerProfile } from "./types.ts";
 import "./TrustSignals.css";
@@ -7,9 +9,10 @@ type SellerProfilePageProps = {
   sellerId: number;
   source: Pick<ReviewsSource, "sellerProfile">;
   onBack: () => void;
+  indexable?: boolean;
 };
 
-export function SellerProfilePage({ sellerId, source, onBack }: SellerProfilePageProps) {
+export function SellerProfilePage({ sellerId, source, onBack, indexable = true }: SellerProfilePageProps) {
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +27,8 @@ export function SellerProfilePage({ sellerId, source, onBack }: SellerProfilePag
         setError(loadError instanceof Error ? loadError.message : "Could not load this seller.");
       });
   }, [sellerId, source]);
+
+  usePublicSeo(paths.seller(sellerId), { seller: profile }, indexable && (Boolean(profile) || Boolean(error)));
 
   return (
     <section className="listings-page">

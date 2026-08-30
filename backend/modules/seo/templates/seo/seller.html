@@ -1,0 +1,23 @@
+{% extends "seo/base.html" %}
+{% block content %}
+<section class="listings-page">
+  <h1>{{ seller.name }}</h1>
+  <p class="listings-lead">Public profile and reviews from completed orders.</p>
+  <p>{{ seller.neighbourhood }}</p>
+  <p>Completed orders: {{ seller.completed_orders }}</p>
+  {% if seller.has_food_handler_certification %}
+  <p>Food handler certified</p>
+  {% endif %}
+  <h2>Reviews</h2>
+  {% if seller.reviews %}
+    {% for review in seller.reviews %}
+    <article>
+      <p>{{ review.stars }} stars · {{ review.buyer_name }}</p>
+      {% if review.comment %}<p>{{ review.comment }}</p>{% endif %}
+    </article>
+    {% endfor %}
+  {% else %}
+  <p>No reviews yet. Buyers can rate a seller after pickup.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -51,6 +51,14 @@ class DjangoPathInfoTests(SimpleTestCase):
                     {"PATH_INFO": "/api", "REQUEST_URI": "/admin/"}
                 ),
                 "admin_direct": django_path_info({"PATH_INFO": "/admin/users/user/"}),
+                "home": django_path_info({"PATH_INFO": "/api", "REQUEST_URI": "/"}),
+                "listing": django_path_info(
+                    {"PATH_INFO": "/api", "REQUEST_URI": "/listings/3/"}
+                ),
+                "seller": django_path_info({"PATH_INFO": "/sellers/2/"}),
+                "sitemap": django_path_info(
+                    {"PATH_INFO": "/api", "REQUEST_URI": "/sitemap.xml"}
+                ),
             },
             {
                 "full": "/api/health/",
@@ -59,6 +67,10 @@ class DjangoPathInfoTests(SimpleTestCase):
                 "prefers_specific_over_function_root": "/api/health/",
                 "admin_rewritten": "/admin/",
                 "admin_direct": "/admin/users/user/",
+                "home": "/",
+                "listing": "/listings/3/",
+                "seller": "/sellers/2/",
+                "sitemap": "/sitemap.xml",
             },
         )
 

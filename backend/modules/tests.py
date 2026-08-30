@@ -22,6 +22,7 @@ class DiscoveryTests(SimpleTestCase):
         self.assertIn("modules.orders", names)
         self.assertIn("modules.geoapify", names)
         self.assertIn("modules.admin_flow", names)
+        self.assertIn("modules.seo", names)
         self.assertNotIn("modules.management", names)
 
 
@@ -34,6 +35,9 @@ class ModuleUrlTests(TestCase):
                 "listings": reverse("listings:collection"),
                 "orders": reverse("orders:index"),
                 "geoapify": reverse("geoapify:autocomplete"),
+                "browse": reverse("seo-pages:browse"),
+                "robots": reverse("seo-pages:robots"),
+                "sitemap": reverse("seo-pages:sitemap"),
             },
             {
                 "health": "/api/health/",
@@ -41,6 +45,9 @@ class ModuleUrlTests(TestCase):
                 "listings": "/api/listings/",
                 "orders": "/api/orders/",
                 "geoapify": "/api/geoapify/autocomplete/",
+                "browse": "/",
+                "robots": "/robots.txt",
+                "sitemap": "/sitemap.xml",
             },
         )
 
