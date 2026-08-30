@@ -3,6 +3,9 @@ export type ListingStatus = "active" | "sold_out";
 export type OrderStatusCounts = {
   pending: number;
   confirmed: number;
+  ready_for_pickup: number;
+  completed: number;
+  expired: number;
   picked_up: number;
   cancelled: number;
 };
@@ -22,6 +25,20 @@ export type Listing = {
   created_at: string;
   updated_at: string;
   order_status: OrderStatusCounts;
+  cuisine: string;
+  photos: string[];
+  sold_out: boolean;
+  seller_name: string;
+  pickup_start: string;
+  pickup_end: string;
+};
+
+export type ListingCatalog = {
+  listings: Listing[];
+  filters: {
+    neighbourhoods: string[];
+    cuisines: string[];
+  };
 };
 
 export type ListingInput = {
@@ -35,6 +52,7 @@ export type ListingInput = {
   pickup_window_start: string;
   pickup_window_end: string;
   status?: ListingStatus;
+  cuisine?: string;
 };
 
 export type ListingSource = {

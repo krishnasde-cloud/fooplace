@@ -21,6 +21,7 @@ LISTING_FIELDS = (
     "pickup_window_start",
     "pickup_window_end",
 )
+OPTIONAL_FIELDS = ("cuisine",)
 
 
 def listing_fields_from(
@@ -33,7 +34,8 @@ def listing_fields_from(
     required = LISTING_FIELDS if not partial else [key for key in LISTING_FIELDS if key in data]
     if "status" in data:
         required = [*required, "status"]
-    if partial and not required:
+    optional = [key for key in OPTIONAL_FIELDS if key in data or not partial]
+    if partial and not required and not optional:
         return None, JsonResponse({"detail": "invalid_listing"}, status=400)
 
     parsers = {
@@ -47,8 +49,12 @@ def listing_fields_from(
         "pickup_window_start": _clock,
         "pickup_window_end": _clock,
         "status": _status,
+        "cuisine": _cuisine,
     }
-    for key in required:
+    for key in [*required, *optional]:
+        if key in optional and key not in data and not partial:
+            fields[key] = ""
+            continue
         value, error = parsers[key](data.get(key))
         if error is not None:
             return None, error
@@ -126,6 +132,13 @@ def _clock(value) -> tuple[time | None, JsonResponse | None]:
         except ValueError:
             continue
     return None, JsonResponse({"detail": "invalid_pickup"}, status=400)
+
+
+def _cuisine(value) -> tuple[str | None, JsonResponse | None]:
+    name = str(value or "").strip()
+    if len(name) > 64:
+        return None, JsonResponse({"detail": "invalid_listing"}, status=400)
+    return name, None
 
 
 def _status(value) -> tuple[str | None, JsonResponse | None]:

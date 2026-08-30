@@ -10,6 +10,7 @@ class ListingAdmin(StaffModelAdmin, admin.ModelAdmin):
     list_display = (
         "dish_name",
         "seller",
+        "cuisine",
         "price",
         "quantity_available",
         "neighbourhood",
@@ -18,7 +19,14 @@ class ListingAdmin(StaffModelAdmin, admin.ModelAdmin):
         "flagged",
         "removed",
     )
-    list_filter = ("status", "neighbourhood", "pickup_date", "moderation__flagged", "moderation__removed")
+    list_filter = (
+        "status",
+        "neighbourhood",
+        "cuisine",
+        "pickup_date",
+        "moderation__flagged",
+        "moderation__removed",
+    )
     search_fields = ("dish_name", "neighbourhood", "seller__email")
     actions = ("flag_listings", "unflag_listings", "remove_listings", "restore_listings")
     list_select_related = ("seller", "moderation")
@@ -56,6 +64,14 @@ class ListingAdmin(StaffModelAdmin, admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(StaffModelAdmin, admin.ModelAdmin):
-    list_display = ("listing", "buyer", "quantity", "status", "created_at")
-    list_filter = ("status",)
+    list_display = (
+        "listing",
+        "buyer",
+        "quantity",
+        "deposit_amount",
+        "deposit_sent",
+        "status",
+        "created_at",
+    )
+    list_filter = ("status", "deposit_sent")
     search_fields = ("listing__dish_name", "buyer__email")

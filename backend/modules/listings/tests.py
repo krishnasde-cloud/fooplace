@@ -200,6 +200,29 @@ class ListingsTests(TestCase):
             {"listing": listing.as_api(), "order": order.as_api()},
         )
 
+    def test_browse_filters_by_neighbourhood_and_cuisine(self):
+        kensington = self._create_listing(cuisine="Thai")
+        mexican = self._create_listing(
+            dish_name="Birria tacos",
+            neighbourhood="Leslieville",
+            cuisine="Mexican",
+        )
+        by_hood = self.client.get("/api/listings/", {"neighbourhood": "kensington"})
+        by_cuisine = self.client.get("/api/listings/", {"cuisine": "Mexican"})
+        by_search = self.client.get("/api/listings/", {"q": "birria"})
+        self.assertEqual(
+            {
+                "hood": by_hood.json(),
+                "cuisine": by_cuisine.json(),
+                "search": by_search.json(),
+            },
+            {
+                "hood": {"listings": [kensington.as_api()]},
+                "cuisine": {"listings": [mexican.as_api()]},
+                "search": {"listings": [mexican.as_api()]},
+            },
+        )
+
 
 def _listing_fields(**overrides) -> dict:
     fields = {
