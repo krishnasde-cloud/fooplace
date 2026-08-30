@@ -112,6 +112,33 @@ class SignupTests(TestCase):
         )
 
     @patch("modules.clerk.clerk_auth.authenticate_request")
+    def test_seller_signup_optional_contact_details(self, mock_authenticate):
+        mock_authenticate.return_value = _signed_in(
+            {"sub": "user_abc", "sid": "sess_1"}
+        )
+        payload = {
+            "type": "seller",
+            "has_food_handler_certification": False,
+            "accepted_terms": True,
+        }
+        response = _auth_post(self.client, payload)
+        self.user.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {**self.user.as_api(), "session_id": "sess_1"},
+        )
+        self.assertEqual(
+            self.user.as_api()["seller"],
+            {
+                "has_food_handler_certification": False,
+                "accepted_terms": True,
+                "facebook_marketplace_url": "",
+                "etransfer_email": "",
+            },
+        )
+
+    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_seller_must_accept_terms(self, mock_authenticate):
         mock_authenticate.return_value = _signed_in(
             {"sub": "user_abc", "sid": "sess_1"}

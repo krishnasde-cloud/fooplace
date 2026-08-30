@@ -1,5 +1,7 @@
 export type AccountType = "buyer" | "seller";
 
+export type SocialProvider = "google" | "facebook";
+
 export type SellerSignup = {
   has_food_handler_certification: boolean;
   accepted_terms: boolean;

@@ -3,8 +3,9 @@ import { useSignUp } from "@clerk/react/legacy";
 import { type ReactNode, useEffect, useState } from "react";
 import { completeSignup } from "./api.ts";
 import { clearPendingSignup, loadPendingSignup, savePendingSignup } from "./pending.ts";
-import { SignupForm, type SocialProvider } from "./SignupForm.tsx";
-import type { SignupPayload } from "./types.ts";
+import { SignupAuth } from "./SignupAuth.tsx";
+import { SignupForm } from "./SignupForm.tsx";
+import type { SignupPayload, SocialProvider } from "./types.ts";
 
 type MeResponse = {
   type: "buyer" | "seller" | "admin" | "";
@@ -27,18 +28,24 @@ export function SignupGate(props: SignupGateProps) {
 }
 
 function LocalSignupGate({ requested, onFinished, onCancel, children }: SignupGateProps) {
+  const [pickedAccount, setPickedAccount] = useState(false);
+
   if (!requested) {
     return children;
+  }
+  if (!pickedAccount) {
+    return (
+      <SignupAuth
+        onCancel={onCancel}
+        onSocial={() => {
+          setPickedAccount(true);
+        }}
+      />
+    );
   }
   return (
     <SignupForm
       initial={loadPendingSignup()}
-      submitLabel="Create account"
-      showSocial
-      onCancel={onCancel}
-      onSocial={() => {
-        throw new Error("Set VITE_CLERK_PUBLISHABLE_KEY to enable Google and Facebook sign-up.");
-      }}
       onSubmit={(payload) => {
         savePendingSignup(payload);
         onFinished();
@@ -49,7 +56,7 @@ function LocalSignupGate({ requested, onFinished, onCancel, children }: SignupGa
 
 function ClerkSignupGate({ requested, onFinished, onCancel, children }: SignupGateProps) {
   const { isSignedIn, getToken } = useAuth();
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const { isLoaded, signUp } = useSignUp();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -124,7 +131,6 @@ function ClerkSignupGate({ requested, onFinished, onCancel, children }: SignupGa
   const profile = isSignedIn ? me : null;
   const alreadyJoined = Boolean(profile?.type);
   const incomplete = Boolean(profile && !profile.type);
-  const showForm = (requested && !alreadyJoined) || incomplete;
 
   useEffect(() => {
     if (requested && alreadyJoined) {
@@ -132,47 +138,7 @@ function ClerkSignupGate({ requested, onFinished, onCancel, children }: SignupGa
     }
   }, [alreadyJoined, onFinished, requested]);
 
-  if (!showForm) {
-    return children;
-  }
-
-  async function submit(payload: SignupPayload, login?: { email: string; password: string }) {
-    if (isSignedIn) {
-      const token = await getToken();
-      if (!token) {
-        throw new Error("Clerk session token missing");
-      }
-      await completeSignup(token, payload);
-      clearPendingSignup();
-      setMe({ type: payload.type });
-      onFinished();
-      return;
-    }
-    savePendingSignup(payload);
-    if (!login) {
-      throw new Error("Enter an email and password, or continue with Google or Facebook.");
-    }
-    if (!isLoaded || !signUp) {
-      throw new Error("Clerk is still loading.");
-    }
-    const created = await signUp.create({
-      emailAddress: login.email,
-      password: login.password,
-    });
-    if (created.status === "complete" && created.createdSessionId) {
-      await setActive({ session: created.createdSessionId });
-      return;
-    }
-    if (created.unverifiedFields?.includes("email_address")) {
-      await created.prepareEmailAddressVerification({ strategy: "email_code" });
-    }
-    throw new Error("Check your email to verify this account, then sign in.");
-  }
-
-  async function social(provider: SocialProvider, payload: SignupPayload | null) {
-    if (payload) {
-      savePendingSignup(payload);
-    }
+  async function social(provider: SocialProvider) {
     if (!isLoaded || !signUp) {
       throw new Error("Clerk is still loading.");
     }
@@ -183,19 +149,34 @@ function ClerkSignupGate({ requested, onFinished, onCancel, children }: SignupGa
     });
   }
 
-  return (
-    <section>
-      {loadError ? <p className="signup-error">{loadError}</p> : null}
-      <SignupForm
-        initial={loadPendingSignup() ?? undefined}
-        submitLabel={isSignedIn ? "Complete signup" : "Create account"}
-        showSocial={!isSignedIn}
-        showEmail={!isSignedIn}
-        showSubmit
-        onCancel={incomplete ? undefined : onCancel}
-        onSocial={social}
-        onSubmit={submit}
-      />
-    </section>
-  );
+  async function submit(payload: SignupPayload) {
+    const token = await getToken();
+    if (!token) {
+      throw new Error("Clerk session token missing");
+    }
+    await completeSignup(token, payload);
+    clearPendingSignup();
+    setMe({ type: payload.type });
+    onFinished();
+  }
+
+  if (incomplete) {
+    return (
+      <section>
+        {loadError ? <p className="signup-error">{loadError}</p> : null}
+        <SignupForm initial={loadPendingSignup() ?? undefined} onSubmit={submit} />
+      </section>
+    );
+  }
+
+  if (requested && !isSignedIn) {
+    return (
+      <section>
+        {loadError ? <p className="signup-error">{loadError}</p> : null}
+        <SignupAuth onCancel={onCancel} onSocial={social} />
+      </section>
+    );
+  }
+
+  return children;
 }

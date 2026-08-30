@@ -48,8 +48,10 @@ def seller_fields_from(data: dict) -> tuple[dict | None, JsonResponse | None]:
     url = marketplace_url(clean_text(data.get("facebook_marketplace_url")))
     email = clean_text(data.get("etransfer_email"))
     try:
-        URLValidator()(url)
-        validate_email(email)
+        if url:
+            URLValidator()(url)
+        if email:
+            validate_email(email)
     except ValidationError:
         return None, JsonResponse({"detail": "invalid_seller_details"}, status=400)
 

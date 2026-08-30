@@ -11,8 +11,8 @@ class SellerProfile(models.Model):
     )
     has_food_handler_certification = models.BooleanField(default=False)
     accepted_terms = models.BooleanField(default=False)
-    facebook_marketplace_url = models.URLField(max_length=500)
-    etransfer_email = models.EmailField()
+    facebook_marketplace_url = models.URLField(max_length=500, blank=True)
+    etransfer_email = models.EmailField(blank=True)
 
     def as_api(self) -> dict:
         return {
