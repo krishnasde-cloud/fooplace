@@ -30,6 +30,12 @@ export function SignupGate(props: SignupGateProps) {
 function LocalSignupGate({ requested, onFinished, onCancel, children }: SignupGateProps) {
   const [pickedAccount, setPickedAccount] = useState(false);
 
+  useEffect(() => {
+    if (!requested) {
+      setPickedAccount(false);
+    }
+  }, [requested]);
+
   if (!requested) {
     return children;
   }
