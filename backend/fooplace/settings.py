@@ -85,6 +85,8 @@ CLERK_PUBLISHABLE_KEY = os.environ.get("CLERK_PUBLISHABLE_KEY") or os.environ.ge
 )
 # Optional PEM public key for networkless verification (Dashboard → API keys).
 CLERK_JWT_KEY = os.environ.get("CLERK_JWT_KEY") or None
+# Server-only. Used to geocode seller pickup addresses.
+GEOAPIFY_API_KEY = os.environ.get("GEOAPIFY_API_KEY", "")
 # Frontend origins allowed in the session token azp claim.
 # Include every Vercel host (unique deploy URL + production / branch aliases).
 CLERK_AUTHORIZED_PARTIES = _csv_env(

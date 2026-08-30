@@ -5,6 +5,7 @@ export type SellerSignup = {
   accepted_terms: boolean;
   facebook_marketplace_url: string;
   etransfer_email: string;
+  pickup_address: string;
 };
 
 export type SignupPayload = {

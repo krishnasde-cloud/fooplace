@@ -19,6 +19,7 @@ class DiscoveryTests(SimpleTestCase):
         self.assertIn("modules.signup", names)
         self.assertIn("modules.listings", names)
         self.assertIn("modules.orders", names)
+        self.assertIn("modules.geoapify", names)
         self.assertIn("modules.admin_flow", names)
         self.assertNotIn("modules.management", names)
 
@@ -31,12 +32,14 @@ class ModuleUrlTests(TestCase):
                 "me": reverse("clerk:me"),
                 "listings": reverse("listings:collection"),
                 "orders": reverse("orders:index"),
+                "geoapify": reverse("geoapify:autocomplete"),
             },
             {
                 "health": "/api/health/",
                 "me": "/api/me/",
                 "listings": "/api/listings/",
                 "orders": "/api/orders/",
+                "geoapify": "/api/geoapify/autocomplete/",
             },
         )
 
