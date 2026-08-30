@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useEffect, useMemo, useState } from "react";
 import { loadPendingSignup } from "@/modules/signup/pending.ts";
+import { BuyerNotifications, IncomingOrders } from "@/modules/orders/index.ts";
 import { apiSource, publicBrowse } from "./api.ts";
 import { localSource } from "./local.ts";
 import { MarketplaceBrowse } from "./MarketplaceBrowse.tsx";
@@ -84,7 +85,12 @@ function ClerkListingsHome() {
     );
   }
   if (isSignedIn && isSeller && source) {
-    return <SellerDashboard source={source} />;
+    return (
+      <>
+        <IncomingOrders token={token} />
+        <SellerDashboard source={source} />
+      </>
+    );
   }
   if (isSignedIn && !me) {
     return (
@@ -93,5 +99,10 @@ function ClerkListingsHome() {
       </section>
     );
   }
-  return <MarketplaceBrowse source={source ?? publicSource} />;
+  return (
+    <>
+      {token ? <BuyerNotifications token={token} /> : null}
+      <MarketplaceBrowse source={source ?? publicSource} />
+    </>
+  );
 }

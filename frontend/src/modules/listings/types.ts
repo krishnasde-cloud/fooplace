@@ -5,6 +5,7 @@ export type OrderStatusCounts = {
   confirmed: number;
   picked_up: number;
   cancelled: number;
+  expired: number;
 };
 
 export type Listing = {

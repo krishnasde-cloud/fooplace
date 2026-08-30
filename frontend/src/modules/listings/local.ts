@@ -7,6 +7,7 @@ const EMPTY_ORDERS: OrderStatusCounts = {
   confirmed: 0,
   picked_up: 0,
   cancelled: 0,
+  expired: 0,
 };
 
 function load(): Listing[] {

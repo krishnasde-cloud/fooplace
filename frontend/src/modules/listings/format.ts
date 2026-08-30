@@ -21,6 +21,7 @@ export function formatOrders(counts: OrderStatusCounts): string {
     counts.pending ? `${counts.pending} pending` : "",
     counts.confirmed ? `${counts.confirmed} confirmed` : "",
     counts.picked_up ? `${counts.picked_up} picked up` : "",
+    counts.expired ? `${counts.expired} expired` : "",
   ].filter(Boolean);
   return parts.length ? parts.join(" · ") : "No orders yet";
 }

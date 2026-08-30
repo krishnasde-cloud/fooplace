@@ -133,6 +133,10 @@ STATIC_ROOT = Path(os.environ.get("DJANGO_STATIC_ROOT", str(BASE_DIR / "staticfi
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Seller must confirm a pending order within this window or it expires.
+ORDER_CONFIRM_HOURS = int(os.environ.get("ORDER_CONFIRM_HOURS", "4"))
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "fooplace@localhost")
+
 MAILERS = {
     "default": {
         "BACKEND": "django.core.mail.backends.console.EmailBackend",

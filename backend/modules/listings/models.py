@@ -71,6 +71,7 @@ class Order(models.Model):
         CONFIRMED = "confirmed", "Confirmed"
         PICKED_UP = "picked_up", "Picked up"
         CANCELLED = "cancelled", "Cancelled"
+        EXPIRED = "expired", "Expired"
 
     listing = models.ForeignKey(
         Listing,
@@ -93,12 +94,25 @@ class Order(models.Model):
     def __str__(self) -> str:
         return f"{self.listing.dish_name} × {self.quantity}"
 
+    def confirm_deadline(self):
+        from datetime import timedelta
+
+        from django.conf import settings
+
+        hours = int(getattr(settings, "ORDER_CONFIRM_HOURS", 4))
+        return self.created_at + timedelta(hours=hours)
+
     def as_api(self) -> dict:
         raw = {
             "id": self.pk,
             "listing_id": self.listing_id,
+            "dish_name": self.listing.dish_name,
             "quantity": self.quantity,
             "status": self.status,
             "created_at": self.created_at,
+            "confirm_by": self.confirm_deadline(),
+            "buyer_email": self.buyer.email,
+            "unit_price": self.listing.price,
+            "history": [event.as_api() for event in self.history.all()],
         }
         return json.loads(json.dumps(raw, cls=DjangoJSONEncoder))
