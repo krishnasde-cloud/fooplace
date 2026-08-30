@@ -14,6 +14,7 @@
     <div id="root">
       {% block content %}{% endblock %}
     </div>
+    <script type="application/json" id="fooplace-ssr-data">{{ ssr_data }}</script>
     {% if spa.js %}<script type="module" src="{{ spa.js }}"></script>{% endif %}
   </body>
 </html>

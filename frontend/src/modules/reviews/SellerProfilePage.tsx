@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { paths } from "@/app/route.ts";
 import { usePublicSeo } from "@/modules/seo/index.ts";
+import { readSsrData } from "@/modules/seo/ssrData.ts";
 import { formatJoined, formatRating, TrustSignals } from "./TrustSignals.tsx";
 import type { ReviewsSource, SellerProfile } from "./types.ts";
 import "./TrustSignals.css";
@@ -13,7 +14,10 @@ type SellerProfilePageProps = {
 };
 
 export function SellerProfilePage({ sellerId, source, onBack, indexable = true }: SellerProfilePageProps) {
-  const [profile, setProfile] = useState<SellerProfile | null>(null);
+  const [profile, setProfile] = useState<SellerProfile | null>(() => {
+    const ssr = readSsrData()?.seller;
+    return ssr?.id === sellerId ? ssr : null;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

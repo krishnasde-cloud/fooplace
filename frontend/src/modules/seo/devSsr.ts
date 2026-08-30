@@ -4,6 +4,10 @@ import path from "node:path";
 import type { Plugin, ViteDevServer } from "vite";
 import { isPublicSeoPath, listingIdFromPath, sellerIdFromPath } from "./publicPath.ts";
 
+function ssrDataScript(data: unknown): string {
+  return `<script type="application/json" id="fooplace-ssr-data">${JSON.stringify(data).replaceAll("<", "\\u003c")}</script>`;
+}
+
 function apiOrigin(): string {
   return process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000";
 }
@@ -64,7 +68,7 @@ async function writePublicHtml(
   html = html.replace('<meta name="robots" content="noindex, nofollow" />', "");
   html = html.replace("<title>Fooplace</title>", "");
   html = html.replace("<!--app-head-->", rendered.head);
-  html = html.replace("<!--app-html-->", rendered.body);
+  html = html.replace("<!--app-html-->", `${rendered.body}${ssrDataScript(data)}`);
   res.statusCode = rendered.status;
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("X-Robots-Tag", rendered.robots);

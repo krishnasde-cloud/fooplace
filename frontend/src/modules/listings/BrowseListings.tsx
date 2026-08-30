@@ -1,14 +1,28 @@
 import { useEffect, useState } from "react";
 import { ListingCard, usePublicSeo } from "@/modules/seo/index.ts";
+import { readSsrData } from "@/modules/seo/ssrData.ts";
 import { fetchListings } from "./api.ts";
-import type { ListingCatalog } from "./types.ts";
+import type { Listing, ListingCatalog } from "./types.ts";
 import "./BrowseListings.css";
+
+function catalogFrom(listings: Listing[]): ListingCatalog {
+  return {
+    listings,
+    filters: {
+      neighbourhoods: [...new Set(listings.map((item) => item.neighbourhood).filter(Boolean))].sort(),
+      cuisines: [...new Set(listings.map((item) => item.cuisine).filter(Boolean))].sort(),
+    },
+  };
+}
 
 export function BrowseListings() {
   const [neighbourhood, setNeighbourhood] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [query, setQuery] = useState("");
-  const [catalog, setCatalog] = useState<ListingCatalog | null>(null);
+  const [catalog, setCatalog] = useState<ListingCatalog | null>(() => {
+    const listings = readSsrData()?.listings;
+    return listings ? catalogFrom(listings) : null;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

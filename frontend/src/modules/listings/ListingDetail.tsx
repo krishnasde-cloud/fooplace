@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { paths } from "@/app/route.ts";
 import { PlaceOrder } from "@/modules/orders/PlaceOrder.tsx";
 import { PublicListing, usePublicSeo } from "@/modules/seo/index.ts";
+import { readSsrData } from "@/modules/seo/ssrData.ts";
 import { fetchListing } from "./api.ts";
 import type { Listing } from "./types.ts";
 import "./ListingDetail.css";
 
 export function ListingDetail({ id }: { id: number }) {
-  const [listing, setListing] = useState<Listing | null>(null);
+  const [listing, setListing] = useState<Listing | null>(() => {
+    const ssr = readSsrData()?.listing;
+    return ssr?.id === id ? ssr : null;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
