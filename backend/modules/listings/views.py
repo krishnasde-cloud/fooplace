@@ -1,12 +1,12 @@
 import json
 
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from modules.listings.models import Listing, Order
+from modules.listings.models import Listing, Order, deposit_for
 from modules.listings.payload import listing_fields_from
 from modules.orders.service import expire_overdue
 from modules.users.models import User
@@ -42,6 +42,17 @@ def _listings_qs():
 def collection(request):
     if request.method == "GET":
         listings = _listings_qs().filter(status=Listing.Status.ACTIVE).order_by("-created_at")
+        neighbourhood = (request.GET.get("neighbourhood") or "").strip()
+        cuisine = (request.GET.get("cuisine") or "").strip()
+        query = (request.GET.get("q") or "").strip()
+        if neighbourhood:
+            listings = listings.filter(neighbourhood__iexact=neighbourhood)
+        if cuisine:
+            listings = listings.filter(cuisine__iexact=cuisine)
+        if query:
+            listings = listings.filter(
+                Q(dish_name__icontains=query) | Q(description__icontains=query)
+            )
         return JsonResponse({"listings": [item.as_api() for item in listings]})
 
     seller = _seller_or_error(request)
@@ -142,7 +153,14 @@ def create_order(request, listing_id: int):
         if listing.quantity_available == 0:
             listing.status = Listing.Status.SOLD_OUT
         listing.save(update_fields=["quantity_available", "status", "updated_at"])
-        order = Order.objects.create(listing=listing, buyer=buyer, quantity=quantity)
+        order = Order.objects.create(
+            listing=listing,
+            buyer=buyer,
+            quantity=quantity,
+            unit_price=listing.price,
+            deposit_amount=deposit_for(listing.price, quantity),
+            status=Order.Status.PENDING,
+        )
 
     listing = _listings_qs().get(pk=listing.pk)
     return JsonResponse({"listing": listing.as_api(), "order": order.as_api()}, status=201)

@@ -22,7 +22,7 @@ def is_overdue(order: Order, now=None) -> bool:
 def record_status(order: Order, status: str, *, note: str = "") -> OrderHistory:
     if order.status != status:
         order.status = status
-        order.save(update_fields=["status"])
+        order.save(update_fields=["status", "updated_at"])
     return OrderHistory.objects.create(order=order, status=status, note=note)
 
 

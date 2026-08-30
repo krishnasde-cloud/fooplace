@@ -1,46 +1,49 @@
-import type { BuyerNotice, IncomingOrdersResponse, SellerOrder } from "./types.ts";
+import { apiGet, apiSend } from "@/shared/http.ts";
+import type { BuyerNotice, IncomingOrdersResponse, Order, SellerOrder } from "./types.ts";
 
-const PREFIX = "/api/orders/";
+export function fetchOrders(token: string, signal?: AbortSignal): Promise<{ orders: Order[] }> {
+  return apiGet<{ orders: Order[] }>("/api/orders/", token, signal);
+}
 
-async function request<T>(
-  path: string,
-  token: string | undefined,
-  init: RequestInit = {},
-): Promise<T> {
-  const headers = new Headers(init.headers);
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  if (init.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  const response = await fetch(`${PREFIX}${path}`, { ...init, headers });
-  const body = await response.json().catch(() => null);
-  if (!response.ok) {
-    const detail =
-      body && typeof body === "object" && "detail" in body ? String(body.detail) : "";
-    throw new Error(
-      detail
-        ? `Backend returned HTTP ${response.status}: ${detail}`
-        : `Backend returned HTTP ${response.status}`,
-    );
-  }
-  return body as T;
+export function fetchOrder(token: string, id: number, signal?: AbortSignal): Promise<Order> {
+  return apiGet<Order>(`/api/orders/${id}/`, token, signal);
+}
+
+export function placeOrder(
+  token: string,
+  listingId: number,
+  quantity: number,
+  signal?: AbortSignal,
+): Promise<Order> {
+  return apiSend<Order>(
+    "/api/orders/",
+    token,
+    "POST",
+    { listing_id: listingId, quantity },
+    signal,
+  );
+}
+
+export function markDepositSent(token: string, id: number): Promise<Order> {
+  return apiSend<Order>(`/api/orders/${id}/deposit-sent/`, token, "POST");
+}
+
+export function markPickedUp(token: string, id: number): Promise<Order> {
+  return apiSend<Order>(`/api/orders/${id}/complete/`, token, "POST");
 }
 
 export function fetchIncoming(token: string): Promise<IncomingOrdersResponse> {
-  return request<IncomingOrdersResponse>("incoming/", token);
+  return apiGet<IncomingOrdersResponse>("/api/orders/incoming/", token);
 }
 
 export function confirmOrder(token: string, orderId: number): Promise<SellerOrder> {
-  return request<SellerOrder>(`${orderId}/confirm/`, token, {
-    method: "POST",
-    body: JSON.stringify({ etransfer_received: true }),
+  return apiSend<SellerOrder>(`/api/orders/${orderId}/confirm/`, token, "POST", {
+    etransfer_received: true,
   });
 }
 
 export function fetchNotifications(token: string): Promise<BuyerNotice[]> {
-  return request<{ notifications: BuyerNotice[] }>("notifications/", token).then(
+  return apiGet<{ notifications: BuyerNotice[] }>("/api/orders/notifications/", token).then(
     (body) => body.notifications,
   );
 }

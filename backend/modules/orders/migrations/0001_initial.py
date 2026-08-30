@@ -6,7 +6,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("listings", "0002_order_expired"),
+        ("listings", "0002_buyer_order_fields"),
         ("users", "0003_user_type_blank"),
     ]
 
@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("status", models.CharField(max_length=16)),
+                ("status", models.CharField(max_length=32)),
                 ("note", models.CharField(blank=True, max_length=200)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (

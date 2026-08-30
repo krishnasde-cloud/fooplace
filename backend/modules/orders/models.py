@@ -3,6 +3,16 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
+from modules.listings.models import DEPOSIT_RATE, Order, deposit_for
+
+__all__ = [
+    "DEPOSIT_RATE",
+    "Order",
+    "OrderHistory",
+    "BuyerNotification",
+    "deposit_for",
+]
+
 
 class OrderHistory(models.Model):
     """Status change log for an order. Kept for later dispute handling."""
@@ -12,7 +22,7 @@ class OrderHistory(models.Model):
         on_delete=models.CASCADE,
         related_name="history",
     )
-    status = models.CharField(max_length=16)
+    status = models.CharField(max_length=32)
     note = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
