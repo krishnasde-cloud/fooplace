@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { PlaceOrder } from "@/modules/orders/PlaceOrder.tsx";
+import { TrustSignals } from "@/modules/reviews/index.ts";
 import { money, pickupWindow } from "@/shared/format.ts";
 import { fetchListing } from "./api.ts";
 import type { Listing } from "./types.ts";
@@ -65,7 +66,15 @@ export function ListingDetail({ id }: { id: number }) {
         <dt>Price</dt>
         <dd>{money(listing.price)}</dd>
         <dt>Seller</dt>
-        <dd>{listing.seller_name}</dd>
+        <dd>
+          {listing.seller ? (
+            <a href={`#/sellers/${listing.seller.id}`}>
+              <TrustSignals seller={listing.seller} />
+            </a>
+          ) : (
+            listing.seller_name
+          )}
+        </dd>
         <dt>Cuisine</dt>
         <dd>{listing.cuisine}</dd>
         <dt>Pickup neighbourhood</dt>

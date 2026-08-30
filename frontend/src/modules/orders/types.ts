@@ -27,6 +27,7 @@ export type Order = {
   deposit_sent: boolean;
   deposit_sent_at: string | null;
   status: OrderStatus;
+  seller_id?: number;
   seller_name: string;
   seller_etransfer_email: string;
   neighbourhood: string;

@@ -1,3 +1,4 @@
+import { localSellerCard } from "@/modules/reviews/local.ts";
 import { listingExpired } from "./format.ts";
 import type { Listing, ListingSource, OrderStatusCounts } from "./types.ts";
 
@@ -79,6 +80,7 @@ export function localSource(): ListingSource {
         created_at: now(),
         updated_at: now(),
         order_status: EMPTY_ORDERS,
+        seller: localSellerCard(),
         ...extras({ ...input, status }),
       };
       listings.unshift(created);

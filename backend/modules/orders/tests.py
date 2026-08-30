@@ -465,7 +465,7 @@ class OrderFlowTests(TestCase):
     def test_cannot_order_expired_listing(self):
         self.listing.expires_at = timezone.now() - timedelta(minutes=1)
         self.listing.save(update_fields=["expires_at"])
-        response = _auth(
+        response = _buyer_auth(
             self.client,
             "post",
             "/api/orders/",

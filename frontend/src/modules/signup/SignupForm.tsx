@@ -16,6 +16,9 @@ function cleanText(value: string): string {
 
 export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupFormProps) {
   const [accountType, setAccountType] = useState<AccountType | "">(initial?.type ?? "");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
+  const [neighbourhood, setNeighbourhood] = useState(initial?.neighbourhood ?? "");
   const [hasFoodHandlerCertification, setHasFoodHandlerCertification] = useState(
     initial?.has_food_handler_certification ?? false,
   );
@@ -33,11 +36,22 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
       setError("Choose whether you are a buyer or a seller.");
       return null;
     }
+    const displayName = cleanText(name);
+    const phoneNumber = cleanText(phone);
+    if (!displayName) {
+      setError("Add your name so people know who they are meeting.");
+      return null;
+    }
     if (accountType === "buyer") {
-      return { type: "buyer" };
+      return { type: "buyer", name: displayName, phone: phoneNumber || undefined };
     }
     if (!acceptedTerms) {
       setError("Sellers must acknowledge the terms and conditions.");
+      return null;
+    }
+    const area = cleanText(neighbourhood);
+    if (!area) {
+      setError("Sellers must add a neighbourhood, not a street address.");
       return null;
     }
     const marketplaceUrl = cleanText(facebookMarketplaceUrl);
@@ -49,6 +63,9 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
     }
     return {
       type: "seller",
+      name: displayName,
+      phone: phoneNumber || undefined,
+      neighbourhood: area,
       has_food_handler_certification: hasFoodHandlerCertification,
       accepted_terms: true,
       facebook_marketplace_url: marketplaceUrl.includes("://")
@@ -104,9 +121,45 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
         </label>
       </fieldset>
 
+      {accountType ? (
+        <fieldset>
+          <legend>Your details</legend>
+          <label className="signup-field">
+            Name
+            <input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Asha Patel"
+              required
+            />
+          </label>
+          <label className="signup-field">
+            Phone
+            <input
+              type="tel"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="Optional if you use email"
+            />
+          </label>
+          <p className="signup-lead">No verification for now — name plus phone or email is enough.</p>
+        </fieldset>
+      ) : null}
+
       {accountType === "seller" ? (
         <fieldset className="signup-seller">
           <legend>Seller details</legend>
+          <label className="signup-field">
+            Neighbourhood
+            <input
+              type="text"
+              value={neighbourhood}
+              onChange={(event) => setNeighbourhood(event.target.value)}
+              placeholder="Kensington"
+              required
+            />
+          </label>
           <label className="signup-check">
             <input
               type="checkbox"

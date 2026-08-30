@@ -33,7 +33,7 @@ PUBLIC_API_PATHS = frozenset(
 
 
 def is_public_api(request) -> bool:
-    """Health plus anonymous browse of active listings (not /mine/ or writes)."""
+    """Health, listing browse, and public seller profiles stay anonymous."""
     if request.path in PUBLIC_API_PATHS:
         return True
     if request.method != "GET":
@@ -43,8 +43,12 @@ def is_public_api(request) -> bool:
         return True
     if path == "/api/listings":
         return True
-    rest = path.removeprefix("/api/listings/")
-    return rest != path and rest.isdigit()
+    if path.startswith("/api/listings/"):
+        rest = path.removeprefix("/api/listings/")
+        return rest.isdigit()
+    if path.startswith("/api/reviews/sellers/"):
+        return path.removeprefix("/api/reviews/sellers/").isdigit()
+    return False
 
 
 @dataclass

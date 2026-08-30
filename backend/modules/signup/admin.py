@@ -8,9 +8,17 @@ from modules.signup.models import SellerProfile
 class SellerProfileAdmin(StaffModelAdmin, admin.ModelAdmin):
     list_display = (
         "user",
+        "neighbourhood",
         "has_food_handler_certification",
         "accepted_terms",
         "etransfer_email",
         "pickup_address",
     )
-    search_fields = ("user__email", "user__user_id", "etransfer_email", "pickup_address")
+    search_fields = (
+        "user__email",
+        "user__user_id",
+        "user__name",
+        "neighbourhood",
+        "etransfer_email",
+        "pickup_address",
+    )

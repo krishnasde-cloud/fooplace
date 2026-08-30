@@ -37,7 +37,10 @@ def _seller_or_error(request) -> User | JsonResponse:
 
 def _listings_qs():
     return Listing.objects.select_related(
-        "seller", "seller__seller_review", "moderation"
+        "seller",
+        "seller__seller_profile",
+        "seller__seller_review",
+        "moderation",
     ).prefetch_related(
         Prefetch("orders", queryset=Order.objects.order_by("created_at"))
     )

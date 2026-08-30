@@ -47,7 +47,9 @@ class SignupTests(TestCase):
         mock_authenticate.return_value = _signed_in(
             {"sub": "user_abc", "sid": "sess_1"}
         )
-        response = _auth_post(self.client, {"type": "buyer"})
+        response = _auth_post(
+            self.client, {"type": "buyer", "name": "Asha Patel", "phone": "416-555-0100"}
+        )
         self.user.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -68,6 +70,9 @@ class SignupTests(TestCase):
         )
         payload = {
             "type": "seller",
+            "name": "Priya Shah",
+            "phone": "416-555-0199",
+            "neighbourhood": "Kensington",
             "has_food_handler_certification": True,
             "accepted_terms": True,
             "facebook_marketplace_url": "https://www.facebook.com/marketplace/profile/123",
@@ -84,6 +89,7 @@ class SignupTests(TestCase):
         self.assertEqual(
             self.user.as_api()["seller"],
             {
+                "neighbourhood": "Kensington",
                 "has_food_handler_certification": True,
                 "accepted_terms": True,
                 "facebook_marketplace_url": "https://www.facebook.com/marketplace/profile/123",
@@ -104,6 +110,8 @@ class SignupTests(TestCase):
         )
         payload = {
             "type": "seller",
+            "name": "Priya Shah",
+            "neighbourhood": "Kensington",
             "has_food_handler_certification": True,
             "accepted_terms": True,
             "facebook_marketplace_url": "\u200bfacebook.com/marketplace/profile/123",
@@ -120,6 +128,7 @@ class SignupTests(TestCase):
         self.assertEqual(
             self.user.as_api()["seller"],
             {
+                "neighbourhood": "Kensington",
                 "has_food_handler_certification": True,
                 "accepted_terms": True,
                 "facebook_marketplace_url": "https://facebook.com/marketplace/profile/123",
@@ -142,6 +151,8 @@ class SignupTests(TestCase):
             self.client,
             {
                 "type": "seller",
+                "name": "Priya Shah",
+                "neighbourhood": "Kensington",
                 "has_food_handler_certification": True,
                 "accepted_terms": True,
                 "facebook_marketplace_url": "https://www.facebook.com/marketplace/profile/123",
@@ -161,6 +172,8 @@ class SignupTests(TestCase):
             self.client,
             {
                 "type": "seller",
+                "name": "Priya Shah",
+                "neighbourhood": "Kensington",
                 "has_food_handler_certification": False,
                 "accepted_terms": False,
                 "facebook_marketplace_url": "https://www.facebook.com/marketplace/profile/123",
@@ -169,6 +182,15 @@ class SignupTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"detail": "terms_required"})
+
+    @patch("modules.clerk.clerk_auth.authenticate_request")
+    def test_buyer_signup_requires_name(self, mock_authenticate):
+        mock_authenticate.return_value = _signed_in(
+            {"sub": "user_abc", "sid": "sess_1"}
+        )
+        response = _auth_post(self.client, {"type": "buyer"})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"detail": "name_required"})
 
     def test_signup_requires_clerk_session(self):
         response = self.client.post(

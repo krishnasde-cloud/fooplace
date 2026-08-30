@@ -100,6 +100,15 @@ function ListingCard({ listing }: { listing: Listing }) {
           {listing.cuisine} · {listing.neighbourhood}
           {listing.sold_out ? " · Sold out" : ""}
         </p>
+        <p className="listing-meta">
+          {listing.seller
+            ? `${listing.seller.name}${listing.seller.has_food_handler_certification ? " · Food handler certified" : ""}${
+                listing.seller.average_rating != null
+                  ? ` · ★ ${listing.seller.average_rating.toFixed(1)}`
+                  : ""
+              }`
+            : listing.seller_name}
+        </p>
         <p className="listing-price">{money(listing.price)}</p>
       </a>
     </li>

@@ -13,7 +13,9 @@ class User(models.Model):
         ADMIN = "admin", "Admin"
 
     user_id = models.CharField(max_length=64, unique=True)
+    name = models.CharField(max_length=80, blank=True)
     email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=32, blank=True)
     connected_using = models.CharField(max_length=64, blank=True)
     user_type = models.CharField(
         max_length=16,
@@ -27,7 +29,11 @@ class User(models.Model):
     last_logged_in = models.DateTimeField()
 
     def __str__(self) -> str:
-        return self.email or self.user_id
+        return self.display_name
+
+    @property
+    def display_name(self) -> str:
+        return self.name or self.email or self.user_id
 
     @property
     def is_admin(self) -> bool:
@@ -35,8 +41,11 @@ class User(models.Model):
 
     def as_api(self) -> dict:
         raw = {
+            "id": self.pk,
             "user_id": self.user_id,
+            "name": self.name,
             "email": self.email,
+            "phone": self.phone,
             "connected_using": self.connected_using,
             "type": self.user_type,
             "is_active": self.is_active,

@@ -13,6 +13,7 @@ import { SellerDashboard } from "./SellerDashboard.tsx";
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 type MeResponse = {
+  id: number;
   type: "buyer" | "seller" | "admin" | "";
   review: SellerReview | null;
 };
@@ -32,7 +33,12 @@ function LocalListingsHome() {
     return (
       <>
         <IncomingOrders source={orders} />
-        <SellerDashboard source={source} />
+        <SellerDashboard
+          source={source}
+          onPublicProfile={() => {
+            window.location.hash = "#/sellers/local";
+          }}
+        />
       </>
     );
   }
@@ -138,7 +144,16 @@ function ClerkListingsHome() {
     return (
       <>
         <IncomingOrders source={orderSource} />
-        <SellerDashboard source={source} />
+        <SellerDashboard
+          source={source}
+          onPublicProfile={
+            me?.id
+              ? () => {
+                  window.location.hash = `#/sellers/${me.id}`;
+                }
+              : undefined
+          }
+        />
       </>
     );
   }

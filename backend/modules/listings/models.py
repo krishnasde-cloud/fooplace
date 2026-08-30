@@ -27,6 +27,12 @@ def _aware(value: datetime) -> datetime:
     return value
 
 
+def _seller_card(user):
+    from modules.reviews.profile import seller_card
+
+    return seller_card(user)
+
+
 class Listing(models.Model):
     """A homemade dish a seller is offering for neighbourhood pickup."""
 
@@ -106,7 +112,8 @@ class Listing(models.Model):
             "cuisine": self.cuisine,
             "photos": [self.photo] if self.photo else [],
             "sold_out": self.is_sold_out,
-            "seller_name": seller.email or seller.user_id,
+            "seller_name": seller.display_name,
+            "seller": _seller_card(seller),
             "pickup_start": self.pickup_start,
             "pickup_end": self.pickup_end,
         }
@@ -210,7 +217,8 @@ class Order(models.Model):
             "deposit_rate": DEPOSIT_RATE,
             "deposit_sent": self.deposit_sent,
             "deposit_sent_at": self.deposit_sent_at,
-            "seller_name": seller.email or seller.user_id,
+            "seller_id": seller.pk,
+            "seller_name": seller.display_name,
             "seller_etransfer_email": (
                 profile.etransfer_email if profile is not None else ""
             ),

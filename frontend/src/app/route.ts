@@ -5,13 +5,18 @@ export type Route =
   | { page: "listing"; id: number }
   | { page: "sell" }
   | { page: "orders" }
-  | { page: "order"; id: number };
+  | { page: "order"; id: number }
+  | { page: "seller"; id: number | "local" };
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, "") || "/";
   const listing = path.match(/^\/listings\/(\d+)\/?$/);
   if (listing) {
     return { page: "listing", id: Number(listing[1]) };
+  }
+  const seller = path.match(/^\/sellers\/(\d+|local)\/?$/);
+  if (seller) {
+    return { page: "seller", id: seller[1] === "local" ? "local" : Number(seller[1]) };
   }
   const order = path.match(/^\/orders\/(\d+)\/?$/);
   if (order) {

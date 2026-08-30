@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/react";
 import { useEffect, useState } from "react";
+import { OrderReview } from "@/modules/reviews/index.ts";
 import { money, pickupWindow } from "@/shared/format.ts";
 import { fetchOrder, markDepositSent, markPickedUp } from "./api.ts";
 import { ORDER_STEPS, type Order, type OrderStatus } from "./types.ts";
@@ -24,6 +25,7 @@ export function OrderStatus({ id }: { id: number }) {
 function ClerkOrderStatus({ id }: { id: number }) {
   const { isSignedIn, getToken } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
+  const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -37,6 +39,7 @@ function ClerkOrderStatus({ id }: { id: number }) {
         if (!token) {
           throw new Error("Clerk session token missing");
         }
+        setToken(token);
         return fetchOrder(token, id, controller.signal);
       })
       .then((payload) => {
@@ -122,6 +125,14 @@ function ClerkOrderStatus({ id }: { id: number }) {
               </button>
             ) : null}
           </div>
+          {(order.status === "completed" || order.status === "picked_up") && token ? (
+            <OrderReview token={token} orderId={order.id} />
+          ) : null}
+          {order.seller_id ? (
+            <p>
+              <a href={`#/sellers/${order.seller_id}`}>View seller profile</a>
+            </p>
+          ) : null}
         </>
       ) : null}
     </section>

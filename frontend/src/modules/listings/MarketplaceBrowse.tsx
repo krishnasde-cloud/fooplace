@@ -1,3 +1,4 @@
+import { TrustSignals } from "@/modules/reviews/index.ts";
 import { useEffect, useState } from "react";
 import { formatPickup, formatPrice } from "./format.ts";
 import type { Listing, ListingSource } from "./types.ts";
@@ -6,12 +7,22 @@ import "./SellerDashboard.css";
 type MarketplaceBrowseProps = {
   source: Pick<ListingSource, "listActive">;
   heading?: string;
+  onOpenSeller?: (id: number) => void;
+  onOrder?: (listing: Listing) => Promise<void> | void;
+  onOrders?: () => void;
 };
 
-export function MarketplaceBrowse({ source, heading = "Nearby dishes" }: MarketplaceBrowseProps) {
+export function MarketplaceBrowse({
+  source,
+  heading = "Nearby dishes",
+  onOpenSeller,
+  onOrder,
+  onOrders,
+}: MarketplaceBrowseProps) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ordering, setOrdering] = useState<number | null>(null);
 
   useEffect(() => {
     source
@@ -28,8 +39,17 @@ export function MarketplaceBrowse({ source, heading = "Nearby dishes" }: Marketp
 
   return (
     <section className="listings-page">
-      <h1>{heading}</h1>
-      <p className="listings-lead">Homemade food for neighbourhood pickup — like Marketplace, for dinner.</p>
+      <div className="listings-toolbar">
+        <div>
+          <h1>{heading}</h1>
+          <p className="listings-lead">Homemade food for neighbourhood pickup — like Marketplace, for dinner.</p>
+        </div>
+        {onOrders ? (
+          <button type="button" className="listings-new" onClick={onOrders}>
+            Your orders
+          </button>
+        ) : null}
+      </div>
       {error ? <p className="listings-error">{error}</p> : null}
       {loading ? <p className="listings-lead">Loading listings…</p> : null}
       {!loading && listings.length === 0 ? (
@@ -50,6 +70,39 @@ export function MarketplaceBrowse({ source, heading = "Nearby dishes" }: Marketp
                 {formatPickup(listing.pickup_date, listing.pickup_window_start, listing.pickup_window_end)}
               </p>
               <p className="listing-meta">{listing.description}</p>
+              {listing.seller ? (
+                <TrustSignals
+                  seller={listing.seller}
+                  onOpen={
+                    onOpenSeller ??
+                    ((sellerId) => {
+                      window.location.hash = `#/sellers/${sellerId}`;
+                    })
+                  }
+                />
+              ) : (
+                <p className="listing-meta">{listing.seller_name}</p>
+              )}
+              {onOrder ? (
+                <div className="listing-card-actions">
+                  <button
+                    type="button"
+                    disabled={ordering === listing.id}
+                    onClick={() => {
+                      setOrdering(listing.id);
+                      Promise.resolve(onOrder(listing))
+                        .catch((orderError: unknown) => {
+                          setError(
+                            orderError instanceof Error ? orderError.message : "Could not place the order.",
+                          );
+                        })
+                        .finally(() => setOrdering(null));
+                    }}
+                  >
+                    {ordering === listing.id ? "Ordering…" : "Order 1"}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </article>
         ))}

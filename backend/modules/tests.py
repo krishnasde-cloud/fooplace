@@ -17,12 +17,11 @@ class DiscoveryTests(SimpleTestCase):
         self.assertIn("modules.clerk", names)
         self.assertIn("modules.users", names)
         self.assertIn("modules.signup", names)
+        self.assertIn("modules.reviews", names)
         self.assertIn("modules.listings", names)
         self.assertIn("modules.orders", names)
         self.assertIn("modules.geoapify", names)
         self.assertIn("modules.admin_flow", names)
-        self.assertIn("modules.listings", names)
-        self.assertIn("modules.orders", names)
         self.assertNotIn("modules.management", names)
 
 
