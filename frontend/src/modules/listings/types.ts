@@ -1,3 +1,5 @@
+import type { SellerCard } from "@/modules/reviews/types.ts";
+
 export type ListingStatus = "active" | "sold_out";
 
 export type OrderStatusCounts = {
@@ -22,6 +24,7 @@ export type Listing = {
   created_at: string;
   updated_at: string;
   order_status: OrderStatusCounts;
+  seller?: SellerCard;
 };
 
 export type ListingInput = {

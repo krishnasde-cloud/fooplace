@@ -6,11 +6,12 @@ import "./SellerDashboard.css";
 
 type SellerDashboardProps = {
   source: ListingSource;
+  onPublicProfile?: () => void;
 };
 
 type View = { kind: "list" } | { kind: "create" } | { kind: "edit"; listing: Listing };
 
-export function SellerDashboard({ source }: SellerDashboardProps) {
+export function SellerDashboard({ source, onPublicProfile }: SellerDashboardProps) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [view, setView] = useState<View>({ kind: "list" });
   const [error, setError] = useState<string | null>(null);
@@ -73,9 +74,16 @@ export function SellerDashboard({ source }: SellerDashboardProps) {
           <h1>Your listings</h1>
           <p className="listings-lead">Active dishes, pickup windows, and order status.</p>
         </div>
-        <button type="button" className="listings-new" onClick={() => setView({ kind: "create" })}>
-          New listing
-        </button>
+        <div className="listing-card-actions">
+          {onPublicProfile ? (
+            <button type="button" onClick={onPublicProfile}>
+              Public profile
+            </button>
+          ) : null}
+          <button type="button" className="listings-new" onClick={() => setView({ kind: "create" })}>
+            New listing
+          </button>
+        </div>
       </div>
       {error ? <p className="listings-error">{error}</p> : null}
       {loading ? <p className="listings-lead">Loading listings…</p> : null}

@@ -1,3 +1,4 @@
+import { localSellerCard } from "@/modules/reviews/local.ts";
 import type { Listing, ListingSource, OrderStatusCounts } from "./types.ts";
 
 const KEY = "fooplace.sellerListings";
@@ -47,6 +48,7 @@ export function localSource(): ListingSource {
         created_at: now(),
         updated_at: now(),
         order_status: EMPTY_ORDERS,
+        seller: localSellerCard(),
       };
       listings.unshift(created);
       save(listings);

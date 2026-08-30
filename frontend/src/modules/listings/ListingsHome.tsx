@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react";
-import { useEffect, useMemo, useState } from "react";
+import { BuyerOrders, SellerProfilePage, localReviews, publicSellerProfile, reviewsApi } from "@/modules/reviews/index.ts";
 import { loadPendingSignup } from "@/modules/signup/pending.ts";
+import { useEffect, useMemo, useState } from "react";
 import { apiSource, publicBrowse } from "./api.ts";
 import { localSource } from "./local.ts";
 import { MarketplaceBrowse } from "./MarketplaceBrowse.tsx";
@@ -9,8 +10,11 @@ import { SellerDashboard } from "./SellerDashboard.tsx";
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 type MeResponse = {
+  id: number;
   type: "buyer" | "seller" | "admin" | "";
 };
+
+type Page = { name: "home" } | { name: "profile"; sellerId: number } | { name: "orders" };
 
 export function ListingsHome() {
   if (publishableKey) {
@@ -21,11 +25,46 @@ export function ListingsHome() {
 
 function LocalListingsHome() {
   const source = useMemo(() => localSource(), []);
-  const seller = loadPendingSignup()?.type === "seller";
-  if (seller) {
-    return <SellerDashboard source={source} />;
+  const reviews = useMemo(() => localReviews(), []);
+  const pending = loadPendingSignup();
+  const isSeller = pending?.type === "seller";
+  const isBuyer = pending?.type === "buyer";
+  const [page, setPage] = useState<Page>({ name: "home" });
+
+  if (page.name === "profile") {
+    return (
+      <SellerProfilePage
+        sellerId={page.sellerId}
+        source={reviews}
+        onBack={() => setPage({ name: "home" })}
+      />
+    );
   }
-  return <MarketplaceBrowse source={source} />;
+  if (page.name === "orders") {
+    return (
+      <BuyerOrders
+        source={reviews}
+        onBack={() => setPage({ name: "home" })}
+        onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
+      />
+    );
+  }
+  if (isSeller) {
+    return (
+      <SellerDashboard
+        source={source}
+        onPublicProfile={() => setPage({ name: "profile", sellerId: 1 })}
+      />
+    );
+  }
+  return (
+    <MarketplaceBrowse
+      source={source}
+      onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
+      onOrder={isBuyer ? (listing) => reviews.placeOrder(listing.id) : undefined}
+      onOrders={isBuyer ? () => setPage({ name: "orders" }) : undefined}
+    />
+  );
 }
 
 function ClerkListingsHome() {
@@ -33,6 +72,7 @@ function ClerkListingsHome() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [token, setToken] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<Page>({ name: "home" });
   const publicSource = useMemo(
     () => ({
       listActive: publicBrowse,
@@ -74,7 +114,12 @@ function ClerkListingsHome() {
   }, [getToken, isSignedIn]);
 
   const source = useMemo(() => (token ? apiSource(token) : null), [token]);
+  const reviews = useMemo(
+    () => (token ? reviewsApi(token) : { sellerProfile: publicSellerProfile }),
+    [token],
+  );
   const isSeller = me?.type === "seller" || me?.type === "admin";
+  const isBuyer = me?.type === "buyer";
 
   if (error) {
     return (
@@ -83,9 +128,6 @@ function ClerkListingsHome() {
       </section>
     );
   }
-  if (isSignedIn && isSeller && source) {
-    return <SellerDashboard source={source} />;
-  }
   if (isSignedIn && !me) {
     return (
       <section className="listings-page">
@@ -93,5 +135,44 @@ function ClerkListingsHome() {
       </section>
     );
   }
-  return <MarketplaceBrowse source={source ?? publicSource} />;
+  if (page.name === "profile") {
+    return (
+      <SellerProfilePage
+        sellerId={page.sellerId}
+        source={reviews}
+        onBack={() => setPage({ name: "home" })}
+      />
+    );
+  }
+  if (page.name === "orders" && token) {
+    return (
+      <BuyerOrders
+        source={reviewsApi(token)}
+        onBack={() => setPage({ name: "home" })}
+        onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
+      />
+    );
+  }
+  if (isSignedIn && isSeller && source) {
+    return (
+      <SellerDashboard
+        source={source}
+        onPublicProfile={
+          me?.id ? () => setPage({ name: "profile", sellerId: me.id }) : undefined
+        }
+      />
+    );
+  }
+  return (
+    <MarketplaceBrowse
+      source={source ?? publicSource}
+      onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
+      onOrder={
+        isBuyer && token
+          ? (listing) => reviewsApi(token).placeOrder(listing.id)
+          : undefined
+      }
+      onOrders={isBuyer ? () => setPage({ name: "orders" }) : undefined}
+    />
+  );
 }

@@ -5,6 +5,12 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 
+def _seller_card(user):
+    from modules.reviews.profile import seller_card
+
+    return seller_card(user)
+
+
 class Listing(models.Model):
     """A homemade dish a seller is offering for neighbourhood pickup."""
 
@@ -53,6 +59,7 @@ class Listing(models.Model):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "order_status": self.order_status(),
+            "seller": _seller_card(self.seller),
         }
         return json.loads(json.dumps(raw, cls=DjangoJSONEncoder))
 
