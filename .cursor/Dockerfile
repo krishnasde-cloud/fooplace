@@ -11,6 +11,7 @@ RUN apt-get update \
         python3 \
         python3-pip \
         python3-venv \
+        sudo \
         xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
@@ -58,7 +59,13 @@ RUN update-alternatives --set iptables /usr/sbin/iptables-legacy && \
 # CONFIG UBUNTU USER
 ########################################################
 
-RUN echo 'PasswordAuthentication no\nChallengeResponseAuthentication no\nUsePAM no' > /etc/ssh/sshd_config.d/disable_password_auth.conf
+# ubuntu:24.04 has no OpenSSH server, so sshd_config.d is missing unless we create it.
+RUN mkdir -p /etc/ssh/sshd_config.d \
+    && printf '%s\n' \
+        'PasswordAuthentication no' \
+        'ChallengeResponseAuthentication no' \
+        'UsePAM no' \
+        > /etc/ssh/sshd_config.d/disable_password_auth.conf
 
 RUN id -u ubuntu >/dev/null 2>&1 || useradd -m -s /bin/bash ubuntu
 RUN groupadd -f docker && usermod -aG docker ubuntu
