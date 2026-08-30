@@ -8,6 +8,12 @@
       "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/orders/expire/",
+      "schedule": "0 * * * *"
+    }
+  ],
   "routes": [
     {
       "src": "/admin(?:/(.*))?",

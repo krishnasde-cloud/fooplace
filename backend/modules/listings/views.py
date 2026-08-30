@@ -9,6 +9,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from modules.backoffice.access import hidden_from_marketplace, listing_is_hidden, seller_can_list
 from modules.listings.models import Listing, Order, deposit_for
 from modules.listings.payload import listing_fields_from
+from modules.orders.service import expire_overdue
 from modules.users.models import User
 
 
@@ -85,6 +86,7 @@ def mine(request):
     seller = _seller_or_error(request)
     if isinstance(seller, JsonResponse):
         return seller
+    expire_overdue()
     listings = _listings_qs().filter(seller=seller).order_by("-created_at")
     return JsonResponse({"listings": [item.as_api() for item in listings]})
 

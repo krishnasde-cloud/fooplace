@@ -4,4 +4,7 @@ from django.apps import AppConfig
 class OrdersConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "modules.orders"
-    verbose_name = "Orders"
+    verbose_name = "orders"
+
+    def ready(self):
+        from modules.orders import signals  # noqa: F401

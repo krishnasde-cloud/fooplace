@@ -3,7 +3,16 @@ export type OrderStatus =
   | "confirmed"
   | "ready_for_pickup"
   | "completed"
-  | "expired";
+  | "expired"
+  | "picked_up"
+  | "cancelled";
+
+export type OrderHistoryEvent = {
+  id: number;
+  status: OrderStatus;
+  note: string;
+  created_at: string;
+};
 
 export type Order = {
   id: number;
@@ -24,6 +33,26 @@ export type Order = {
   pickup_start: string;
   pickup_end: string;
   created_at: string;
+  confirm_by: string;
+  buyer_email: string;
+  history: OrderHistoryEvent[];
+};
+
+export type SellerOrder = Order;
+
+export type IncomingOrdersResponse = {
+  confirm_hours: number;
+  orders: SellerOrder[];
+};
+
+export type BuyerNotice = {
+  id: number;
+  order_id: number;
+  kind: "expired" | "confirmed";
+  message: string;
+  created_at: string;
+  read_at: string | null;
+  dish_name: string;
 };
 
 export const ORDER_STEPS: { id: OrderStatus; label: string }[] = [

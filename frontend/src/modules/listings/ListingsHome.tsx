@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { SellerHold } from "@/modules/backoffice/index.ts";
 import type { SellerReview } from "@/modules/backoffice/index.ts";
 import { loadPendingSignup } from "@/modules/signup/pending.ts";
+import { BuyerNotifications, IncomingOrders } from "@/modules/orders/index.ts";
+import { apiOrderSource, localSource as localOrders } from "@/modules/orders/local.ts";
 import { apiSource, publicBrowse } from "./api.ts";
 import { localSource } from "./local.ts";
 import { MarketplaceBrowse } from "./MarketplaceBrowse.tsx";
@@ -24,9 +26,15 @@ export function ListingsHome() {
 
 function LocalListingsHome() {
   const source = useMemo(() => localSource(), []);
+  const orders = useMemo(() => localOrders(), []);
   const seller = loadPendingSignup()?.type === "seller";
   if (seller) {
-    return <SellerDashboard source={source} />;
+    return (
+      <>
+        <IncomingOrders source={orders} />
+        <SellerDashboard source={source} />
+      </>
+    );
   }
   return <MarketplaceBrowse source={source} />;
 }
@@ -77,6 +85,7 @@ function ClerkListingsHome() {
   }, [getToken, isSignedIn]);
 
   const source = useMemo(() => (token ? apiSource(token) : null), [token]);
+  const orderSource = useMemo(() => apiOrderSource(token), [token]);
   const review = me?.review;
   const sellerBlocked =
     me?.type === "seller" &&
@@ -112,6 +121,7 @@ function ClerkListingsHome() {
           title="Seller application rejected"
           message="An admin reviewed this seller account and did not approve it. You can still browse as a buyer."
         />
+        {token ? <BuyerNotifications token={token} /> : null}
         <MarketplaceBrowse source={source ?? publicSource} />
       </>
     );
@@ -125,7 +135,17 @@ function ClerkListingsHome() {
     );
   }
   if (isSignedIn && isSeller && source) {
-    return <SellerDashboard source={source} />;
+    return (
+      <>
+        <IncomingOrders source={orderSource} />
+        <SellerDashboard source={source} />
+      </>
+    );
   }
-  return <MarketplaceBrowse source={source ?? publicSource} />;
+  return (
+    <>
+      {token ? <BuyerNotifications token={token} /> : null}
+      <MarketplaceBrowse source={source ?? publicSource} />
+    </>
+  );
 }

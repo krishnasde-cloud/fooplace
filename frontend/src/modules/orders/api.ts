@@ -1,5 +1,5 @@
 import { apiGet, apiSend } from "@/shared/http.ts";
-import type { Order } from "./types.ts";
+import type { BuyerNotice, IncomingOrdersResponse, Order, SellerOrder } from "./types.ts";
 
 export function fetchOrders(token: string, signal?: AbortSignal): Promise<{ orders: Order[] }> {
   return apiGet<{ orders: Order[] }>("/api/orders/", token, signal);
@@ -30,4 +30,20 @@ export function markDepositSent(token: string, id: number): Promise<Order> {
 
 export function markPickedUp(token: string, id: number): Promise<Order> {
   return apiSend<Order>(`/api/orders/${id}/complete/`, token, "POST");
+}
+
+export function fetchIncoming(token: string): Promise<IncomingOrdersResponse> {
+  return apiGet<IncomingOrdersResponse>("/api/orders/incoming/", token);
+}
+
+export function confirmOrder(token: string, orderId: number): Promise<SellerOrder> {
+  return apiSend<SellerOrder>(`/api/orders/${orderId}/confirm/`, token, "POST", {
+    etransfer_received: true,
+  });
+}
+
+export function fetchNotifications(token: string): Promise<BuyerNotice[]> {
+  return apiGet<{ notifications: BuyerNotice[] }>("/api/orders/notifications/", token).then(
+    (body) => body.notifications,
+  );
 }

@@ -13,6 +13,8 @@ const STATUS_LABEL: Record<Order["status"], string> = {
   ready_for_pickup: "Ready for pickup",
   completed: "Completed",
   expired: "Expired",
+  picked_up: "Picked up",
+  cancelled: "Cancelled",
 };
 
 export function BuyerOrders() {

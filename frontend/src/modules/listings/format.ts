@@ -23,6 +23,7 @@ export function formatOrders(counts: OrderStatusCounts): string {
     counts.ready_for_pickup ? `${counts.ready_for_pickup} ready` : "",
     counts.picked_up ? `${counts.picked_up} picked up` : "",
     counts.completed ? `${counts.completed} completed` : "",
+    counts.expired ? `${counts.expired} expired` : "",
   ].filter(Boolean);
   return parts.length ? parts.join(" · ") : "No orders yet";
 }

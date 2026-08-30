@@ -1,7 +1,8 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
@@ -137,6 +138,10 @@ class Order(models.Model):
     def __str__(self) -> str:
         return f"{self.listing.dish_name} × {self.quantity}"
 
+    def confirm_deadline(self):
+        hours = int(getattr(settings, "ORDER_CONFIRM_HOURS", 4))
+        return self.created_at + timedelta(hours=hours)
+
     def refresh_status(self) -> "Order":
         if self.status in {
             self.Status.COMPLETED,
@@ -193,5 +198,8 @@ class Order(models.Model):
             "neighbourhood": listing.neighbourhood,
             "pickup_start": listing.pickup_start,
             "pickup_end": listing.pickup_end,
+            "confirm_by": self.confirm_deadline(),
+            "buyer_email": self.buyer.email,
+            "history": [event.as_api() for event in self.history.all()],
         }
         return json.loads(json.dumps(raw, cls=DjangoJSONEncoder))

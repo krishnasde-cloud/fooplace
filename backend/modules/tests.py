@@ -20,6 +20,8 @@ class DiscoveryTests(SimpleTestCase):
         self.assertIn("modules.listings", names)
         self.assertIn("modules.orders", names)
         self.assertIn("modules.admin_flow", names)
+        self.assertIn("modules.listings", names)
+        self.assertIn("modules.orders", names)
         self.assertNotIn("modules.management", names)
 
 
