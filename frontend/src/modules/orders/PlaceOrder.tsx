@@ -15,12 +15,19 @@ export function PlaceOrder({ listing }: { listing: Listing }) {
 }
 
 function SignedOutOrder({ listing }: { listing: Listing }) {
+  const [quantity, setQuantity] = useState(1);
   const pickupEnded = new Date(listing.pickup_end) <= new Date();
   const unavailable = listing.sold_out || listing.quantity_available < 1 || pickupEnded;
   return (
     <section className="place-order">
       <h2>Place an order</h2>
-      <DepositPreview listing={listing} quantity={1} />
+      <QuantityField
+        listing={listing}
+        quantity={quantity}
+        unavailable={unavailable}
+        onChange={setQuantity}
+      />
+      <DepositPreview listing={listing} quantity={quantity} />
       {unavailable ? (
         <p>This listing is not available to order.</p>
       ) : (
@@ -37,7 +44,6 @@ function ClerkPlaceOrder({ listing }: { listing: Listing }) {
   const [error, setError] = useState<string | null>(null);
   const pickupEnded = new Date(listing.pickup_end) <= new Date();
   const unavailable = listing.sold_out || listing.quantity_available < 1 || pickupEnded;
-  const maxQuantity = Math.max(listing.quantity_available, 1);
 
   async function submit() {
     setError(null);
@@ -59,17 +65,12 @@ function ClerkPlaceOrder({ listing }: { listing: Listing }) {
   return (
     <section className="place-order">
       <h2>Place an order</h2>
-      <label className="quantity-row">
-        Quantity
-        <input
-          type="number"
-          min={1}
-          max={maxQuantity}
-          value={quantity}
-          disabled={unavailable}
-          onChange={(event) => setQuantity(Number(event.target.value) || 1)}
-        />
-      </label>
+      <QuantityField
+        listing={listing}
+        quantity={quantity}
+        unavailable={unavailable}
+        onChange={setQuantity}
+      />
       <DepositPreview listing={listing} quantity={quantity} />
       {error ? <p className="order-error">{error}</p> : null}
       {unavailable ? <p>This listing is not available to order.</p> : null}
@@ -88,6 +89,52 @@ function ClerkPlaceOrder({ listing }: { listing: Listing }) {
         </SignInButton>
       ) : null}
     </section>
+  );
+}
+
+function QuantityField({
+  listing,
+  quantity,
+  unavailable,
+  onChange,
+}: {
+  listing: Listing;
+  quantity: number;
+  unavailable: boolean;
+  onChange: (value: number) => void;
+}) {
+  const maxQuantity = Math.max(listing.quantity_available, 1);
+  return (
+    <div className="quantity-row">
+      <span>Quantity</span>
+      <button
+        type="button"
+        className="order-secondary"
+        disabled={unavailable || quantity <= 1}
+        onClick={() => onChange(quantity - 1)}
+        aria-label="Decrease quantity"
+      >
+        –
+      </button>
+      <input
+        type="number"
+        min={1}
+        max={maxQuantity}
+        value={quantity}
+        disabled={unavailable}
+        onChange={(event) => onChange(Number(event.target.value) || 1)}
+        aria-label="Quantity"
+      />
+      <button
+        type="button"
+        className="order-secondary"
+        disabled={unavailable || quantity >= maxQuantity}
+        onClick={() => onChange(quantity + 1)}
+        aria-label="Increase quantity"
+      >
+        +
+      </button>
+    </div>
   );
 }
 
