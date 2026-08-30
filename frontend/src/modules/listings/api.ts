@@ -1,4 +1,4 @@
-import type { Listing, ListingInput, ListingSource } from "./types.ts";
+import type { Listing, ListingSource } from "./types.ts";
 
 const PREFIX = "/api/listings/";
 

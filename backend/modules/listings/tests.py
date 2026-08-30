@@ -91,8 +91,8 @@ class ListingsTests(TestCase):
     def test_seller_creates_listing(self, mock_authenticate):
         self._as_seller(mock_authenticate)
         response = _auth(self.client, "post", "/api/listings/", _listing_body())
-        listing = Listing.objects.get()
         self.assertEqual(response.status_code, 201)
+        listing = Listing.objects.get()
         self.assertEqual(response.json(), listing.as_api())
 
     def test_dashboard_requires_session(self):

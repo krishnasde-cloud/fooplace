@@ -1,4 +1,4 @@
-import type { Listing, ListingInput, ListingSource, OrderStatusCounts } from "./types.ts";
+import type { Listing, ListingSource, OrderStatusCounts } from "./types.ts";
 
 const KEY = "fooplace.sellerListings";
 

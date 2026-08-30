@@ -20,7 +20,6 @@ LISTING_FIELDS = (
     "pickup_date",
     "pickup_window_start",
     "pickup_window_end",
-    "status",
 )
 
 
@@ -32,6 +31,8 @@ def listing_fields_from(
 
     fields: dict = {}
     required = LISTING_FIELDS if not partial else [key for key in LISTING_FIELDS if key in data]
+    if "status" in data:
+        required = [*required, "status"]
     if partial and not required:
         return None, JsonResponse({"detail": "invalid_listing"}, status=400)
 
