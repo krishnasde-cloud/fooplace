@@ -31,12 +31,22 @@ def apply_signup(user: User, data: dict) -> User | JsonResponse:
     return user
 
 
+def clean_text(value: object) -> str:
+    return "".join(char for char in str(value or "").strip() if char.isprintable())
+
+
+def marketplace_url(value: str) -> str:
+    if value and "://" not in value:
+        return f"https://{value}"
+    return value
+
+
 def seller_fields_from(data: dict) -> tuple[dict | None, JsonResponse | None]:
     if data.get("accepted_terms") is not True:
         return None, JsonResponse({"detail": "terms_required"}, status=400)
 
-    url = str(data.get("facebook_marketplace_url") or "").strip()
-    email = str(data.get("etransfer_email") or "").strip()
+    url = marketplace_url(clean_text(data.get("facebook_marketplace_url")))
+    email = clean_text(data.get("etransfer_email"))
     try:
         URLValidator()(url)
         validate_email(email)

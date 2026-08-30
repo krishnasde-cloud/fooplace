@@ -9,6 +9,10 @@ type SignupFormProps = {
   onCancel?: () => void;
 };
 
+function cleanText(value: string): string {
+  return [...value.trim()].filter((char) => char !== "\u200b").join("");
+}
+
 export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupFormProps) {
   const [accountType, setAccountType] = useState<AccountType | "">(initial?.type ?? "");
   const [hasFoodHandlerCertification, setHasFoodHandlerCertification] = useState(
@@ -34,7 +38,9 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
       setError("Sellers must acknowledge the terms and conditions.");
       return null;
     }
-    if (!facebookMarketplaceUrl.trim() || !etransferEmail.trim()) {
+    const marketplaceUrl = cleanText(facebookMarketplaceUrl);
+    const payoutEmail = cleanText(etransferEmail);
+    if (!marketplaceUrl || !payoutEmail) {
       setError("Sellers must add a Facebook Marketplace URL and an e-transfer email.");
       return null;
     }
@@ -42,8 +48,10 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
       type: "seller",
       has_food_handler_certification: hasFoodHandlerCertification,
       accepted_terms: true,
-      facebook_marketplace_url: facebookMarketplaceUrl.trim(),
-      etransfer_email: etransferEmail.trim(),
+      facebook_marketplace_url: marketplaceUrl.includes("://")
+        ? marketplaceUrl
+        : `https://${marketplaceUrl}`,
+      etransfer_email: payoutEmail,
     };
   }
 

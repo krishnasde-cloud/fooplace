@@ -23,17 +23,19 @@ from modules.users.user_sync import link_clerk_user
 
 # Liveness stays public so the SPA can check Django without a session.
 PUBLIC_API_PATHS = frozenset({"/api/health/", "/api/health"})
-# Buyers can browse listings before signing in.
-PUBLIC_GET_PREFIXES = ("/api/listings",)
 
 
 def is_public_api(request) -> bool:
-    path = request.path
-    if path in PUBLIC_API_PATHS:
+    """Health plus anonymous browse of active listings (not /mine/ or writes)."""
+    if request.path in PUBLIC_API_PATHS:
         return True
     if request.method != "GET":
         return False
-    return any(path == prefix or path.startswith(f"{prefix}/") for prefix in PUBLIC_GET_PREFIXES)
+    path = request.path.rstrip("/")
+    if path == "/api/listings":
+        return True
+    rest = path.removeprefix("/api/listings/")
+    return rest != path and rest.isdigit()
 
 
 @dataclass

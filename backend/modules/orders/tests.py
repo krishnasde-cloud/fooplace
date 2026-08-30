@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import time, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -55,9 +55,11 @@ def _seller_listing(**overrides) -> Listing:
         "neighbourhood": "Kensington",
         "price": Decimal("16.00"),
         "quantity_available": 8,
-        "photos": ["https://example.com/pad-thai.jpg"],
-        "pickup_start": now + timedelta(hours=2),
-        "pickup_end": now + timedelta(hours=8),
+        "photo": "https://example.com/pad-thai.jpg",
+        "pickup_date": timezone.localdate() + timedelta(days=1),
+        "pickup_window_start": time(17, 0),
+        "pickup_window_end": time(21, 0),
+        "status": Listing.Status.ACTIVE,
     }
     defaults.update(overrides)
     return Listing.objects.create(**defaults)
@@ -129,9 +131,9 @@ class OrderFlowTests(TestCase):
         )
 
     def test_deposit_during_pickup_window_is_ready(self):
-        now = timezone.now()
-        self.listing.pickup_start = now - timedelta(minutes=10)
-        self.listing.pickup_end = now + timedelta(hours=3)
+        self.listing.pickup_date = timezone.localdate()
+        self.listing.pickup_window_start = time(0, 0)
+        self.listing.pickup_window_end = time(23, 59)
         self.listing.save()
 
         created = _auth(
@@ -154,8 +156,8 @@ class OrderFlowTests(TestCase):
             "/api/orders/",
             body={"listing_id": self.listing.pk, "quantity": 2},
         )
-        self.listing.pickup_end = timezone.now() - timedelta(minutes=1)
-        self.listing.save(update_fields=["pickup_end"])
+        self.listing.pickup_date = timezone.localdate() - timedelta(days=1)
+        self.listing.save(update_fields=["pickup_date"])
 
         detail = _auth(self.client, "get", f"/api/orders/{created.json()['id']}/")
         self.listing.refresh_from_db()

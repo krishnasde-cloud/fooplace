@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import time, timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -15,12 +15,10 @@ SEED_LISTINGS = (
         "neighbourhood": "Kensington",
         "price": "16.00",
         "quantity_available": 8,
-        "photos": [
-            "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80",
-        ],
-        "start_offset": timedelta(hours=2),
-        "end_offset": timedelta(hours=8),
+        "photo": "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=800&q=80",
+        "pickup_offset_days": 0,
+        "pickup_window_start": time(17, 0),
+        "pickup_window_end": time(21, 0),
     },
     {
         "dish_name": "Birria tacos",
@@ -29,11 +27,10 @@ SEED_LISTINGS = (
         "neighbourhood": "Leslieville",
         "price": "18.00",
         "quantity_available": 6,
-        "photos": [
-            "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=800&q=80",
-        ],
-        "start_offset": timedelta(hours=-1),
-        "end_offset": timedelta(hours=5),
+        "photo": "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=800&q=80",
+        "pickup_offset_days": 0,
+        "pickup_window_start": time(12, 0),
+        "pickup_window_end": time(20, 0),
     },
     {
         "dish_name": "Lasagna al forno",
@@ -42,11 +39,10 @@ SEED_LISTINGS = (
         "neighbourhood": "Kensington",
         "price": "22.00",
         "quantity_available": 4,
-        "photos": [
-            "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?auto=format&fit=crop&w=800&q=80",
-        ],
-        "start_offset": timedelta(days=1),
-        "end_offset": timedelta(days=1, hours=4),
+        "photo": "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?auto=format&fit=crop&w=800&q=80",
+        "pickup_offset_days": 1,
+        "pickup_window_start": time(16, 0),
+        "pickup_window_end": time(20, 0),
     },
 )
 
@@ -81,6 +77,7 @@ class Command(BaseCommand):
             },
         )
 
+        today = timezone.localdate()
         for item in SEED_LISTINGS:
             Listing.objects.create(
                 seller=seller,
@@ -90,9 +87,11 @@ class Command(BaseCommand):
                 neighbourhood=item["neighbourhood"],
                 price=item["price"],
                 quantity_available=item["quantity_available"],
-                photos=item["photos"],
-                pickup_start=now + item["start_offset"],
-                pickup_end=now + item["end_offset"],
+                photo=item["photo"],
+                pickup_date=today + timedelta(days=item["pickup_offset_days"]),
+                pickup_window_start=item["pickup_window_start"],
+                pickup_window_end=item["pickup_window_end"],
+                status=Listing.Status.ACTIVE,
             )
 
         self.stdout.write(f"Seeded {len(SEED_LISTINGS)} listings.")

@@ -29,7 +29,7 @@ class ModuleUrlTests(TestCase):
             {
                 "health": reverse("health:health"),
                 "me": reverse("clerk:me"),
-                "listings": reverse("listings:index"),
+                "listings": reverse("listings:collection"),
                 "orders": reverse("orders:index"),
             },
             {

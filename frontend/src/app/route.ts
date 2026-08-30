@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 export type Route =
   | { page: "browse" }
   | { page: "listing"; id: number }
+  | { page: "sell" }
   | { page: "orders" }
   | { page: "order"; id: number };
 
@@ -18,6 +19,9 @@ export function parseHash(hash: string): Route {
   }
   if (path === "/orders" || path === "/orders/") {
     return { page: "orders" };
+  }
+  if (path === "/sell" || path === "/sell/") {
+    return { page: "sell" };
   }
   return { page: "browse" };
 }
