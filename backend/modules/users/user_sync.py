@@ -28,7 +28,6 @@ def link_clerk_user(clerk_user_id: str, payload: dict) -> User:
             connected_using=profile.connected_using,
             is_verified=profile.is_verified,
             is_active=profile.is_active,
-            user_type=User.UserType.BUYER,
             first_logged_in=now,
             last_logged_in=now,
         )

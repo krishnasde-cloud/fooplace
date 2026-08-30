@@ -18,7 +18,8 @@ class User(models.Model):
     user_type = models.CharField(
         max_length=16,
         choices=UserType.choices,
-        default=UserType.BUYER,
+        blank=True,
+        default="",
     )
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
@@ -42,5 +43,12 @@ class User(models.Model):
             "is_verified": self.is_verified,
             "first_logged_in": self.first_logged_in,
             "last_logged_in": self.last_logged_in,
+            "seller": self._seller_api(),
         }
         return json.loads(json.dumps(raw, cls=DjangoJSONEncoder))
+
+    def _seller_api(self) -> dict | None:
+        seller = getattr(self, "seller_profile", None)
+        if seller is None:
+            return None
+        return seller.as_api()

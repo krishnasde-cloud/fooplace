@@ -1,9 +1,13 @@
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/react";
+import { Show, SignInButton, UserButton } from "@clerk/react";
 import "./AuthHeader.css";
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-export function AuthHeader() {
+type AuthHeaderProps = {
+  onSignUp?: () => void;
+};
+
+export function AuthHeader({ onSignUp }: AuthHeaderProps) {
   return (
     <header className="auth-bar">
       {publishableKey ? (
@@ -14,18 +18,21 @@ export function AuthHeader() {
                 Sign in
               </button>
             </SignInButton>
-            <SignUpButton>
-              <button type="button" className="auth-signup">
-                Sign up
-              </button>
-            </SignUpButton>
+            <button type="button" className="auth-signup" onClick={onSignUp}>
+              Sign up
+            </button>
           </Show>
           <Show when="signed-in">
             <UserButton />
           </Show>
         </>
       ) : (
-        <span className="auth-hint">Set VITE_CLERK_PUBLISHABLE_KEY to enable sign-in</span>
+        <>
+          <button type="button" className="auth-signup" onClick={onSignUp}>
+            Sign up
+          </button>
+          <span className="auth-hint">Set VITE_CLERK_PUBLISHABLE_KEY to enable sign-in</span>
+        </>
       )}
     </header>
   );

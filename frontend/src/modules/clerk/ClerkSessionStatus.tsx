@@ -5,12 +5,18 @@ type MeResponse = {
   user_id: string;
   email: string;
   connected_using: string;
-  type: "buyer" | "seller" | "admin";
+  type: "buyer" | "seller" | "admin" | "";
   is_active: boolean;
   is_verified: boolean;
   first_logged_in: string;
   last_logged_in: string;
   session_id: string | null;
+  seller: {
+    has_food_handler_certification: boolean;
+    accepted_terms: boolean;
+    facebook_marketplace_url: string;
+    etransfer_email: string;
+  } | null;
 };
 
 export function ClerkSessionStatus() {

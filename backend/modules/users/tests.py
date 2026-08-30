@@ -35,7 +35,7 @@ class UserLinkTests(TestCase):
             user_id="user_abc",
             email="buyer@example.com",
             connected_using="google",
-            user_type=User.UserType.BUYER,
+            user_type="",
             is_active=True,
             is_verified=True,
         )
@@ -62,7 +62,7 @@ class UserLinkTests(TestCase):
             user_id="user_abc",
             email="buyer@example.com",
             connected_using="google",
-            user_type=User.UserType.BUYER,
+            user_type="",
             is_active=True,
             is_verified=True,
         )
