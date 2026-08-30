@@ -47,6 +47,9 @@ export function apiSource(token: string): ListingSource {
         body: JSON.stringify(input),
       });
     },
+    relist(id) {
+      return request<Listing>(`${id}/relist/`, token, { method: "POST" });
+    },
     async remove(id) {
       await request<{ ok: true }>(`${id}/`, token, { method: "DELETE" });
     },

@@ -3,6 +3,7 @@ import json
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
@@ -41,13 +42,23 @@ def _listings_qs():
     )
 
 
+def _live_listings():
+    return _listings_qs().filter(
+        status=Listing.Status.ACTIVE,
+        expires_at__gt=timezone.now(),
+    )
+
+
+def _can_manage(listing: Listing, seller: User) -> bool:
+    return listing.seller_id == seller.pk or seller.user_type == User.UserType.ADMIN
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def collection(request):
     if request.method == "GET":
         listings = (
-            _listings_qs()
-            .filter(status=Listing.Status.ACTIVE)
+            _live_listings()
             .exclude(hidden_from_marketplace())
             .order_by("-created_at")
         )
@@ -97,14 +108,14 @@ def detail(request, listing_id: int):
         return JsonResponse({"detail": "not_found"}, status=404)
 
     if request.method == "GET":
-        if listing_is_hidden(listing):
+        if listing_is_hidden(listing) or listing.is_expired:
             return JsonResponse({"detail": "not_found"}, status=404)
         return JsonResponse(listing.as_api())
 
     seller = _seller_or_error(request)
     if isinstance(seller, JsonResponse):
         return seller
-    if listing.seller_id != seller.pk and seller.user_type != User.UserType.ADMIN:
+    if not _can_manage(listing, seller):
         return JsonResponse({"detail": "not_found"}, status=404)
 
     if request.method == "DELETE":
@@ -133,6 +144,24 @@ def detail(request, listing_id: int):
 
 @csrf_exempt
 @require_POST
+def relist(request, listing_id: int):
+    seller = _seller_or_error(request)
+    if isinstance(seller, JsonResponse):
+        return seller
+    listing = _listings_qs().filter(pk=listing_id).first()
+    if listing is None or not _can_manage(listing, seller):
+        return JsonResponse({"detail": "not_found"}, status=404)
+    if not listing.is_expired:
+        return JsonResponse({"detail": "not_expired"}, status=400)
+    if listing.quantity_available < 1:
+        return JsonResponse({"detail": "sold_out"}, status=400)
+    listing.relist()
+    listing = _listings_qs().get(pk=listing.pk)
+    return JsonResponse(listing.as_api())
+
+
+@csrf_exempt
+@require_POST
 def create_order(request, listing_id: int):
     if not getattr(request.user, "is_authenticated", False):
         return JsonResponse({"detail": "unauthorized"}, status=401)
@@ -153,7 +182,7 @@ def create_order(request, listing_id: int):
             .filter(pk=listing_id, status=Listing.Status.ACTIVE)
             .first()
         )
-        if listing is None or listing_is_hidden(listing):
+        if listing is None or listing_is_hidden(listing) or listing.is_expired:
             return JsonResponse({"detail": "not_found"}, status=404)
         if listing.seller_id == buyer.pk:
             return JsonResponse({"detail": "own_listing"}, status=400)

@@ -17,7 +17,8 @@ export function PlaceOrder({ listing }: { listing: Listing }) {
 function SignedOutOrder({ listing }: { listing: Listing }) {
   const [quantity, setQuantity] = useState(1);
   const pickupEnded = new Date(listing.pickup_end) <= new Date();
-  const unavailable = listing.sold_out || listing.quantity_available < 1 || pickupEnded;
+  const unavailable =
+    listing.sold_out || listing.expired || listing.quantity_available < 1 || pickupEnded;
   return (
     <section className="place-order">
       <h2>Place an order</h2>
@@ -43,7 +44,8 @@ function ClerkPlaceOrder({ listing }: { listing: Listing }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pickupEnded = new Date(listing.pickup_end) <= new Date();
-  const unavailable = listing.sold_out || listing.quantity_available < 1 || pickupEnded;
+  const unavailable =
+    listing.sold_out || listing.expired || listing.quantity_available < 1 || pickupEnded;
 
   async function submit() {
     setError(null);

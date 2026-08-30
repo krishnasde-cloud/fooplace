@@ -22,6 +22,8 @@ export type Listing = {
   pickup_window_end: string;
   status: ListingStatus;
   photo: string;
+  expires_at: string;
+  expired: boolean;
   created_at: string;
   updated_at: string;
   order_status: OrderStatusCounts;
@@ -60,5 +62,6 @@ export type ListingSource = {
   listActive: () => Promise<Listing[]>;
   create: (input: ListingInput) => Promise<Listing>;
   update: (id: number, input: Partial<ListingInput>) => Promise<Listing>;
+  relist: (id: number) => Promise<Listing>;
   remove: (id: number) => Promise<void>;
 };

@@ -19,7 +19,7 @@ def place_order(buyer, listing_id, quantity) -> Order | JsonResponse:
         )
         if listing is None:
             return JsonResponse({"detail": "listing_not_found"}, status=404)
-        if listing.is_sold_out or listing.pickup_end <= now:
+        if listing.is_sold_out or listing.is_expired or listing.pickup_end <= now:
             return JsonResponse({"detail": "listing_unavailable"}, status=400)
         if listing.seller_id == buyer.pk:
             return JsonResponse({"detail": "own_listing"}, status=400)

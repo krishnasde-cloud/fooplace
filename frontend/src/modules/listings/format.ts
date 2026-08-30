@@ -16,6 +16,32 @@ export function formatPickup(date: string, start: string, end: string): string {
   return `${when} · ${formatClock(start)}–${formatClock(end)}`;
 }
 
+export function formatExpiry(expiresAt: string, expired: boolean): string {
+  if (expired || listingExpired({ expires_at: expiresAt, expired })) {
+    return "Expired after 24 hours";
+  }
+  const end = new Date(expiresAt);
+  if (Number.isNaN(end.getTime())) {
+    return "Live for 24 hours";
+  }
+  return `Live until ${end.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })}`;
+}
+
+export function listingExpired(listing: { expires_at?: string; expired?: boolean }): boolean {
+  if (listing.expired) {
+    return true;
+  }
+  if (!listing.expires_at) {
+    return false;
+  }
+  return Date.parse(listing.expires_at) <= Date.now();
+}
+
 export function formatOrders(counts: OrderStatusCounts): string {
   const parts = [
     counts.pending ? `${counts.pending} pending` : "",

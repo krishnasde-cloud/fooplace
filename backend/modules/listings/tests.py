@@ -1,5 +1,5 @@
 import json
-from datetime import date, time
+from datetime import date, time, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -199,6 +199,38 @@ class ListingsTests(TestCase):
             response.json(),
             {"listing": listing.as_api(), "order": order.as_api()},
         )
+
+    @patch("modules.clerk.clerk_auth.authenticate_request")
+    def test_expired_listing_is_hidden_until_relisted(self, mock_authenticate):
+        listing = self._create_listing()
+        listing.expires_at = timezone.now() - timedelta(minutes=1)
+        listing.save(update_fields=["expires_at"])
+
+        browse = self.client.get("/api/listings/")
+        detail = self.client.get(f"/api/listings/{listing.pk}/")
+        self.assertEqual(
+            {"browse": browse.json(), "detail": detail.json(), "detail_status": detail.status_code},
+            {
+                "browse": {"listings": []},
+                "detail": {"detail": "not_found"},
+                "detail_status": 404,
+            },
+        )
+
+        self._as_seller(mock_authenticate)
+        mine = _auth(self.client, "get", "/api/listings/mine/")
+        listing = Listing.objects.prefetch_related("orders").get(pk=listing.pk)
+        self.assertEqual(mine.json(), {"listings": [listing.as_api()]})
+        self.assertEqual(listing.as_api()["expired"], True)
+
+        relisted = _auth(self.client, "post", f"/api/listings/{listing.pk}/relist/")
+        listing = Listing.objects.prefetch_related("orders").get(pk=listing.pk)
+        self.assertEqual(relisted.status_code, 200)
+        self.assertEqual(relisted.json(), listing.as_api())
+        self.assertEqual(listing.as_api()["expired"], False)
+
+        browse = self.client.get("/api/listings/")
+        self.assertEqual(browse.json(), {"listings": [listing.as_api()]})
 
     def test_browse_filters_by_neighbourhood_and_cuisine(self):
         kensington = self._create_listing(cuisine="Thai")
