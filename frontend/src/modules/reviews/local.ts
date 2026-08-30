@@ -94,12 +94,12 @@ export function localReviews(): ReviewsSource {
       );
       return review;
     },
-    async placeOrder(listingId, quantity = 1) {
+    async placeOrder(listingId, quantity = 1, dishName = "Local dish") {
       const seller = localSellerCard();
       const order: BuyerOrder = {
         id: Date.now(),
         listing_id: listingId,
-        dish_name: "Local dish",
+        dish_name: dishName,
         quantity,
         status: "pending",
         created_at: new Date().toISOString(),

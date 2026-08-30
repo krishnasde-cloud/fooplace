@@ -37,5 +37,5 @@ export type ReviewsSource = {
   myOrders: () => Promise<BuyerOrder[]>;
   completeOrder: (id: number) => Promise<BuyerOrder>;
   leaveReview: (orderId: number, stars: number, comment: string) => Promise<Review>;
-  placeOrder: (listingId: number, quantity?: number) => Promise<unknown>;
+  placeOrder: (listingId: number, quantity?: number, dishName?: string) => Promise<unknown>;
 };

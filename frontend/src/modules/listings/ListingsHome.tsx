@@ -65,7 +65,7 @@ function LocalListingsHome() {
     <MarketplaceBrowse
       source={publicSource}
       onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
-      onOrder={isBuyer ? (listing) => reviews.placeOrder(listing.id) : undefined}
+      onOrder={isBuyer ? (listing) => reviews.placeOrder(listing.id, 1, listing.dish_name) : undefined}
       onOrders={isBuyer ? () => setPage({ name: "orders" }) : undefined}
     />
   );
@@ -173,7 +173,7 @@ function ClerkListingsHome() {
       onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
       onOrder={
         isBuyer && token
-          ? (listing) => reviewsApi(token).placeOrder(listing.id)
+          ? (listing) => reviewsApi(token).placeOrder(listing.id, 1, listing.dish_name)
           : undefined
       }
       onOrders={isBuyer ? () => setPage({ name: "orders" }) : undefined}
