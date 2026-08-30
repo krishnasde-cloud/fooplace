@@ -1,15 +1,7 @@
 from django.db.models import Q
-from django.http import JsonResponse
 
 from modules.backoffice.models import SellerReview
 from modules.users.models import User
-
-
-def admin_or_error(request) -> User | JsonResponse:
-    record = getattr(request.user, "record", None)
-    if record is None or not record.is_active or not record.is_admin:
-        return JsonResponse({"detail": "admin_required"}, status=403)
-    return record
 
 
 def seller_can_list(user: User) -> bool:

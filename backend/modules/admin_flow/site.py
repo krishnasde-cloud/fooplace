@@ -36,7 +36,7 @@ def configure_admin_site(site) -> None:
     site._admin_flow_configured = True
     site.site_header = "Fooplace admin"
     site.site_title = "Fooplace admin"
-    site.index_title = "All data"
+    site.index_title = "Back office"
     site.login_template = "admin_flow/login.html"
     site.index_template = "admin_flow/index.html"
 

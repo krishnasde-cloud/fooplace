@@ -1,5 +1,3 @@
-import "./Backoffice.css";
-
 type SellerHoldProps = {
   title: string;
   message: string;

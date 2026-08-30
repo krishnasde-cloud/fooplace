@@ -8,7 +8,6 @@ from django.test import TestCase
 from django.utils import timezone
 
 from modules.backoffice.models import ListingModeration, SellerReview
-from modules.backoffice.payload import listing_as_api, order_as_api, seller_as_api
 from modules.listings.models import Listing, Order
 from modules.signup.models import SellerProfile
 from modules.users.models import User
@@ -37,6 +36,14 @@ def _auth(client, method: str, path: str, body: dict | None = None):
         data=json.dumps(body),
         content_type="application/json",
         **extras,
+    )
+
+
+def _admin_action(client, path: str, action: str, pks: list[int]):
+    return client.post(
+        path,
+        {"action": action, "_selected_action": pks},
+        HTTP_AUTHORIZATION="Bearer sess_test",
     )
 
 
@@ -79,8 +86,8 @@ class BackofficeTests(TestCase):
     def _as_seller(self, mock_authenticate):
         mock_authenticate.return_value = _signed_in(self.seller.user_id)
 
-    def _as_buyer(self, mock_authenticate):
-        mock_authenticate.return_value = _signed_in(self.buyer.user_id)
+    def _review(self) -> SellerReview:
+        return SellerReview.objects.select_related("user").get(user=self.seller)
 
     def _listing(self, **overrides) -> Listing:
         fields = {
@@ -100,7 +107,7 @@ class BackofficeTests(TestCase):
         return Listing.objects.create(**fields)
 
     def test_signup_queues_pending_seller_review(self):
-        review = SellerReview.objects.get(user=self.seller)
+        review = self._review()
         self.assertEqual(
             review.as_api(),
             {
@@ -110,10 +117,7 @@ class BackofficeTests(TestCase):
                 "note": "",
             },
         )
-        self.assertEqual(
-            self.seller.as_api()["review"],
-            review.as_api(),
-        )
+        self.assertEqual(self.seller.as_api()["review"], review.as_api())
 
     @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_pending_seller_cannot_create_listing(self, mock_authenticate):
@@ -139,43 +143,32 @@ class BackofficeTests(TestCase):
         self.assertEqual(Listing.objects.count(), 0)
 
     @patch("modules.clerk.clerk_auth.authenticate_request")
-    def test_buyer_cannot_open_backoffice(self, mock_authenticate):
-        self._as_buyer(mock_authenticate)
-        response = _auth(self.client, "get", "/api/backoffice/")
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json(), {"detail": "admin_required"})
-
-    def test_anonymous_cannot_open_backoffice(self):
-        response = self.client.get("/api/backoffice/")
-        self.assertEqual(response.status_code, 401)
-
-    def _fresh_seller(self) -> User:
-        return User.objects.select_related("seller_profile", "seller_review").get(
-            pk=self.seller.pk
-        )
-
-    @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_admin_approves_seller_then_seller_can_list(self, mock_authenticate):
         self._as_admin(mock_authenticate)
-        pending = _auth(self.client, "get", "/api/backoffice/sellers/?status=pending")
-        self.assertEqual(
-            pending.json(),
-            {"sellers": [seller_as_api(self._fresh_seller())]},
-        )
-        approved = _auth(
+        review = self._review()
+        pending = _auth(self.client, "get", "/admin/backoffice/sellerreview/")
+        approved = _admin_action(
             self.client,
-            "post",
-            f"/api/backoffice/sellers/{self.seller.user_id}/",
-            {"action": "approve", "note": "Looks good"},
+            "/admin/backoffice/sellerreview/",
+            "approve_sellers",
+            [review.pk],
         )
-        self.assertEqual(approved.json(), seller_as_api(self._fresh_seller()))
+        review = self._review()
         self.assertEqual(
-            approved.json()["review"],
             {
-                "status": SellerReview.Status.APPROVED,
-                "flagged": False,
-                "removed": False,
-                "note": "Looks good",
+                "pending": pending.status_code,
+                "approved": approved.status_code,
+                "review": review.as_api(),
+            },
+            {
+                "pending": 200,
+                "approved": 302,
+                "review": {
+                    "status": SellerReview.Status.APPROVED,
+                    "flagged": False,
+                    "removed": False,
+                    "note": "",
+                },
             },
         )
 
@@ -204,37 +197,47 @@ class BackofficeTests(TestCase):
     def test_admin_rejects_and_removes_seller(self, mock_authenticate):
         listing = self._listing()
         self._as_admin(mock_authenticate)
-        rejected = _auth(
+        review = self._review()
+        rejected = _admin_action(
             self.client,
-            "post",
-            f"/api/backoffice/sellers/{self.seller.user_id}/",
-            {"action": "reject"},
+            "/admin/backoffice/sellerreview/",
+            "reject_sellers",
+            [review.pk],
         )
-        self.assertEqual(rejected.json(), seller_as_api(self._fresh_seller()))
-        self.assertEqual(rejected.json()["review"]["status"], SellerReview.Status.REJECTED)
+        review = self._review()
+        self.assertEqual(rejected.status_code, 302)
         self.assertEqual(
-            self.client.get("/api/listings/").json(),
-            {"listings": []},
+            review.as_api(),
+            {
+                "status": SellerReview.Status.REJECTED,
+                "flagged": False,
+                "removed": False,
+                "note": "",
+            },
         )
+        self.assertEqual(self.client.get("/api/listings/").json(), {"listings": []})
 
-        removed = _auth(
+        removed = _admin_action(
             self.client,
-            "post",
-            f"/api/backoffice/sellers/{self.seller.user_id}/",
-            {"action": "remove", "note": "Spam"},
+            "/admin/backoffice/sellerreview/",
+            "remove_sellers",
+            [review.pk],
         )
-        seller = self._fresh_seller()
-        self.assertEqual(removed.json(), seller_as_api(seller))
+        review = self._review()
+        self.assertEqual(removed.status_code, 302)
         self.assertEqual(
             {
-                "removed": seller.seller_review.removed,
-                "flagged": seller.seller_review.flagged,
-                "is_active": seller.is_active,
+                "review": review.as_api(),
+                "is_active": review.user.is_active,
                 "listing": Listing.objects.filter(pk=listing.pk).exists(),
             },
             {
-                "removed": True,
-                "flagged": True,
+                "review": {
+                    "status": SellerReview.Status.REJECTED,
+                    "flagged": True,
+                    "removed": True,
+                    "note": "",
+                },
                 "is_active": False,
                 "listing": True,
             },
@@ -246,72 +249,55 @@ class BackofficeTests(TestCase):
         self.assertEqual(blocked.json(), {"detail": "inactive"})
 
     @patch("modules.clerk.clerk_auth.authenticate_request")
-    def test_admin_flags_and_removes_listing(self, mock_authenticate):
+    def test_admin_views_and_removes_listings_and_orders(self, mock_authenticate):
         SellerReview.objects.filter(user=self.seller).update(
             status=SellerReview.Status.APPROVED
         )
         listing = self._listing()
-        order = Order.objects.create(listing=listing, buyer=self.buyer, quantity=1)
+        Order.objects.create(listing=listing, buyer=self.buyer, quantity=1)
         self._as_admin(mock_authenticate)
 
-        before = Listing.objects.select_related("seller", "moderation").prefetch_related(
+        listings = _auth(self.client, "get", "/admin/listings/listing/")
+        orders = _auth(self.client, "get", "/admin/listings/order/")
+        flagged = _admin_action(
+            self.client,
+            "/admin/listings/listing/",
+            "flag_listings",
+            [listing.pk],
+        )
+        listing = Listing.objects.select_related("moderation").prefetch_related(
             "orders"
         ).get(pk=listing.pk)
-        index = _auth(self.client, "get", "/api/backoffice/")
-        listings = _auth(self.client, "get", "/api/backoffice/listings/")
-        orders = _auth(self.client, "get", "/api/backoffice/orders/")
         self.assertEqual(
-            index.json(),
             {
-                "pending_sellers": 0,
-                "flagged_sellers": 0,
-                "removed_sellers": 0,
-                "listings": 1,
-                "flagged_listings": 0,
-                "removed_listings": 0,
-                "orders": 1,
+                "listings": listings.status_code,
+                "orders": orders.status_code,
+                "flagged": flagged.status_code,
+                "moderation": listing.moderation.as_api(),
+                "public": self.client.get("/api/listings/").json(),
+            },
+            {
+                "listings": 200,
+                "orders": 200,
+                "flagged": 302,
+                "moderation": {"flagged": True, "removed": False, "note": ""},
+                "public": {"listings": [listing.as_api()]},
             },
         )
-        self.assertEqual(listings.json(), {"listings": [listing_as_api(before)]})
-        self.assertEqual(
-            orders.json(),
-            {"orders": [order_as_api(Order.objects.select_related(
-                "buyer", "listing", "listing__seller"
-            ).get(pk=order.pk))]},
-        )
 
-        flagged = _auth(
+        removed = _admin_action(
             self.client,
-            "post",
-            f"/api/backoffice/listings/{listing.pk}/",
-            {"action": "flag", "note": "Check photo"},
+            "/admin/listings/listing/",
+            "remove_listings",
+            [listing.pk],
         )
-        listing = Listing.objects.select_related("seller", "moderation").prefetch_related(
+        listing = Listing.objects.select_related("moderation").prefetch_related(
             "orders"
         ).get(pk=listing.pk)
-        self.assertEqual(flagged.json(), listing_as_api(listing))
+        self.assertEqual(removed.status_code, 302)
         self.assertEqual(
-            flagged.json()["moderation"],
-            {"flagged": True, "removed": False, "note": "Check photo"},
-        )
-        self.assertEqual(
-            self.client.get("/api/listings/").json(),
-            {"listings": [listing.as_api()]},
-        )
-
-        removed = _auth(
-            self.client,
-            "post",
-            f"/api/backoffice/listings/{listing.pk}/",
-            {"action": "remove"},
-        )
-        listing = Listing.objects.select_related("seller", "moderation").prefetch_related(
-            "orders"
-        ).get(pk=listing.pk)
-        self.assertEqual(removed.json(), listing_as_api(listing))
-        self.assertEqual(
-            removed.json()["moderation"],
-            {"flagged": True, "removed": True, "note": "Check photo"},
+            listing.moderation.as_api(),
+            {"flagged": True, "removed": True, "note": ""},
         )
         self.assertEqual(self.client.get("/api/listings/").json(), {"listings": []})
         self.assertEqual(
@@ -320,23 +306,21 @@ class BackofficeTests(TestCase):
         )
         self.assertEqual(Listing.objects.filter(pk=listing.pk).exists(), True)
 
-        restored = _auth(
+        restored = _admin_action(
             self.client,
-            "post",
-            f"/api/backoffice/listings/{listing.pk}/",
-            {"action": "restore"},
+            "/admin/listings/listing/",
+            "restore_listings",
+            [listing.pk],
         )
-        listing = Listing.objects.select_related("seller", "moderation").prefetch_related(
+        listing = Listing.objects.select_related("moderation").prefetch_related(
             "orders"
         ).get(pk=listing.pk)
-        self.assertEqual(restored.json(), listing_as_api(listing))
+        self.assertEqual(restored.status_code, 302)
+        self.assertEqual(
+            listing.moderation.as_api(),
+            {"flagged": False, "removed": False, "note": ""},
+        )
         self.assertEqual(
             self.client.get("/api/listings/").json(),
             {"listings": [listing.as_api()]},
         )
-
-    @patch("modules.clerk.clerk_auth.authenticate_request")
-    def test_admin_can_open_django_admin_reviews(self, mock_authenticate):
-        self._as_admin(mock_authenticate)
-        response = _auth(self.client, "get", "/admin/backoffice/sellerreview/")
-        self.assertEqual(response.status_code, 200)

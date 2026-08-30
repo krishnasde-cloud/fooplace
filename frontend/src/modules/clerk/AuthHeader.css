@@ -28,6 +28,17 @@
   border: 1px solid transparent;
 }
 
+.auth-admin {
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  text-decoration: none;
+}
+
 .auth-hint {
   font-family: var(--mono);
   font-size: 13px;
