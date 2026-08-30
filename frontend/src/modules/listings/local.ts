@@ -1,3 +1,4 @@
+import { listingExpired } from "./format.ts";
 import type { Listing, ListingSource, OrderStatusCounts } from "./types.ts";
 
 const KEY = "fooplace.sellerListings";
@@ -32,6 +33,10 @@ function now(): string {
   return new Date().toISOString();
 }
 
+function expiresAt(from = Date.now()): string {
+  return new Date(from + 24 * 60 * 60 * 1000).toISOString();
+}
+
 function extras(input: {
   photo: string;
   neighbourhood: string;
@@ -59,7 +64,7 @@ export function localSource(): ListingSource {
       return load();
     },
     async listActive() {
-      return load().filter((listing) => listing.status === "active");
+      return load().filter((listing) => listing.status === "active" && !listingExpired(listing));
     },
     async create(input) {
       const listings = load();
@@ -69,6 +74,8 @@ export function localSource(): ListingSource {
         ...input,
         price: Number(input.price).toFixed(2),
         status,
+        expires_at: expiresAt(),
+        expired: false,
         created_at: now(),
         updated_at: now(),
         order_status: EMPTY_ORDERS,
@@ -93,6 +100,31 @@ export function localSource(): ListingSource {
         price: input.price !== undefined ? Number(input.price).toFixed(2) : current.price,
         updated_at: now(),
         ...extras(merged),
+      };
+      listings[index] = next;
+      save(listings);
+      return next;
+    },
+    async relist(id) {
+      const listings = load();
+      const index = listings.findIndex((listing) => listing.id === id);
+      if (index < 0) {
+        throw new Error("Listing not found");
+      }
+      const current = listings[index];
+      if (!listingExpired(current)) {
+        throw new Error("Listing is still live");
+      }
+      if (current.quantity_available < 1) {
+        throw new Error("Add quantity before re-listing");
+      }
+      const next: Listing = {
+        ...current,
+        status: "active",
+        expires_at: expiresAt(),
+        expired: false,
+        updated_at: now(),
+        sold_out: false,
       };
       listings[index] = next;
       save(listings);

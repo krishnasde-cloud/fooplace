@@ -16,6 +16,7 @@ class ListingAdmin(StaffModelAdmin, admin.ModelAdmin):
         "neighbourhood",
         "pickup_date",
         "status",
+        "expires_at",
         "flagged",
         "removed",
     )

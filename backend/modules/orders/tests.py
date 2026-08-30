@@ -462,6 +462,18 @@ class OrderFlowTests(TestCase):
         self.assertEqual(hidden.json(), {"detail": "not_found"})
         self.assertEqual(hidden.status_code, 404)
 
+    def test_cannot_order_expired_listing(self):
+        self.listing.expires_at = timezone.now() - timedelta(minutes=1)
+        self.listing.save(update_fields=["expires_at"])
+        response = _auth(
+            self.client,
+            "post",
+            "/api/orders/",
+            body={"listing_id": self.listing.pk, "quantity": 1},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"detail": "listing_unavailable"})
+
     def test_cannot_order_more_than_available(self):
         response = _buyer_auth(
             self.client,

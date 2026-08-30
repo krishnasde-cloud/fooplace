@@ -9,6 +9,11 @@ from django.db import models, transaction
 from django.utils import timezone
 
 DEPOSIT_RATE = Decimal("0.50")
+LISTING_LIFETIME = timedelta(hours=24)
+
+
+def default_expires_at():
+    return timezone.now() + LISTING_LIFETIME
 
 
 def deposit_for(unit_price: Decimal, quantity: int) -> Decimal:
@@ -49,6 +54,7 @@ class Listing(models.Model):
         choices=Status.choices,
         default=Status.ACTIVE,
     )
+    expires_at = models.DateTimeField(default=default_expires_at)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -58,6 +64,17 @@ class Listing(models.Model):
     @property
     def is_sold_out(self) -> bool:
         return self.status == self.Status.SOLD_OUT or self.quantity_available == 0
+
+    @property
+    def is_expired(self) -> bool:
+        return timezone.now() >= self.expires_at
+
+    def relist(self) -> "Listing":
+        self.expires_at = default_expires_at()
+        if self.quantity_available > 0:
+            self.status = self.Status.ACTIVE
+        self.save(update_fields=["expires_at", "status", "updated_at"])
+        return self
 
     @property
     def pickup_start(self) -> datetime:
@@ -81,6 +98,8 @@ class Listing(models.Model):
             "pickup_window_end": self.pickup_window_end,
             "status": self.status,
             "photo": self.photo,
+            "expires_at": self.expires_at,
+            "expired": self.is_expired,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "order_status": self.order_status(),
