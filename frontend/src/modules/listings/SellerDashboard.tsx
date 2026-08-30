@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formatOrders, formatPickup, formatPrice } from "./format.ts";
+import { formatExpiry, formatOrders, formatPickup, formatPrice, listingExpired } from "./format.ts";
 import { ListingForm } from "./ListingForm.tsx";
 import type { Listing, ListingInput, ListingSource } from "./types.ts";
 import "./SellerDashboard.css";
@@ -64,15 +64,18 @@ export function SellerDashboard({ source, onPublicProfile }: SellerDashboardProp
     );
   }
 
-  const active = listings.filter((listing) => listing.status === "active");
-  const sold = listings.filter((listing) => listing.status === "sold_out");
+  const expired = listings.filter((listing) => listingExpired(listing));
+  const active = listings.filter((listing) => listing.status === "active" && !listingExpired(listing));
+  const sold = listings.filter((listing) => listing.status === "sold_out" && !listingExpired(listing));
 
   return (
     <section className="listings-page">
       <div className="listings-toolbar">
         <div>
           <h1>Your listings</h1>
-          <p className="listings-lead">Active dishes, pickup windows, and order status.</p>
+          <p className="listings-lead">
+            Active dishes stay live for 24 hours. Re-list an expired dish to publish it again.
+          </p>
         </div>
         <div className="listing-card-actions">
           {onPublicProfile ? (
@@ -123,6 +126,28 @@ export function SellerDashboard({ source, onPublicProfile }: SellerDashboardProp
           }}
         />
       ) : null}
+      {expired.length ? (
+        <ListingGroup
+          title="Expired"
+          listings={expired}
+          onEdit={(listing) => setView({ kind: "edit", listing })}
+          onRelist={async (listing) => {
+            try {
+              await source.relist(listing.id);
+              await refresh();
+            } catch (relistError: unknown) {
+              setError(relistError instanceof Error ? relistError.message : "Could not re-list.");
+            }
+          }}
+          onDelete={async (listing) => {
+            if (!window.confirm(`Delete ${listing.dish_name}?`)) {
+              return;
+            }
+            await source.remove(listing.id);
+            await refresh();
+          }}
+        />
+      ) : null}
     </section>
   );
 }
@@ -132,45 +157,57 @@ type ListingGroupProps = {
   listings: Listing[];
   onEdit: (listing: Listing) => void;
   onSoldOut?: (listing: Listing) => Promise<void>;
+  onRelist?: (listing: Listing) => Promise<void>;
   onDelete: (listing: Listing) => Promise<void>;
 };
 
-function ListingGroup({ title, listings, onEdit, onSoldOut, onDelete }: ListingGroupProps) {
+function ListingGroup({ title, listings, onEdit, onSoldOut, onRelist, onDelete }: ListingGroupProps) {
   return (
     <div className="listings-grid">
       <h2 className="listings-lead">{title}</h2>
-      {listings.map((listing) => (
-        <article key={listing.id} className="listing-card">
-          <img src={listing.photo} alt={listing.dish_name} />
-          <div className="listing-card-body">
-            <span className={`listing-status${listing.status === "sold_out" ? " sold" : ""}`}>
-              {listing.status === "sold_out" ? "Sold out" : "Active"}
-            </span>
-            <h2>{listing.dish_name}</h2>
-            <p className="listing-meta">
-              {formatPrice(listing.price)} · {listing.quantity_available} left
-            </p>
-            <p className="listing-meta">
-              {listing.neighbourhood} ·{" "}
-              {formatPickup(listing.pickup_date, listing.pickup_window_start, listing.pickup_window_end)}
-            </p>
-            <p className="listing-meta">Orders: {formatOrders(listing.order_status)}</p>
-            <div className="listing-card-actions">
-              <button type="button" onClick={() => onEdit(listing)}>
-                Edit
-              </button>
-              {onSoldOut ? (
-                <button type="button" onClick={() => void onSoldOut(listing)}>
-                  Mark sold out
+      {listings.map((listing) => {
+        const expired = listingExpired(listing);
+        return (
+          <article key={listing.id} className="listing-card">
+            <img src={listing.photo} alt={listing.dish_name} />
+            <div className="listing-card-body">
+              <span
+                className={`listing-status${expired ? " expired" : listing.status === "sold_out" ? " sold" : ""}`}
+              >
+                {expired ? "Expired" : listing.status === "sold_out" ? "Sold out" : "Active"}
+              </span>
+              <h2>{listing.dish_name}</h2>
+              <p className="listing-meta">
+                {formatPrice(listing.price)} · {listing.quantity_available} left
+              </p>
+              <p className="listing-meta">
+                {listing.neighbourhood} ·{" "}
+                {formatPickup(listing.pickup_date, listing.pickup_window_start, listing.pickup_window_end)}
+              </p>
+              <p className="listing-meta">{formatExpiry(listing.expires_at, expired)}</p>
+              <p className="listing-meta">Orders: {formatOrders(listing.order_status)}</p>
+              <div className="listing-card-actions">
+                {onRelist ? (
+                  <button type="button" className="relist" onClick={() => void onRelist(listing)}>
+                    Re-list
+                  </button>
+                ) : null}
+                <button type="button" onClick={() => onEdit(listing)}>
+                  Edit
                 </button>
-              ) : null}
-              <button type="button" className="danger" onClick={() => void onDelete(listing)}>
-                Delete
-              </button>
+                {onSoldOut ? (
+                  <button type="button" onClick={() => void onSoldOut(listing)}>
+                    Mark sold out
+                  </button>
+                ) : null}
+                <button type="button" className="danger" onClick={() => void onDelete(listing)}>
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 }

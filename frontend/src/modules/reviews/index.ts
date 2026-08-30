@@ -1,4 +1,5 @@
 export { BuyerOrders } from "./BuyerOrders.tsx";
+export { OrderReview } from "./OrderReview.tsx";
 export { SellerProfilePage } from "./SellerProfilePage.tsx";
 export { TrustSignals } from "./TrustSignals.tsx";
 export { reviewsApi, publicSellerProfile } from "./api.ts";

@@ -26,7 +26,7 @@ export type BuyerOrder = {
   listing_id: number;
   dish_name: string;
   quantity: number;
-  status: "pending" | "confirmed" | "picked_up" | "cancelled";
+  status: "pending" | "confirmed" | "ready_for_pickup" | "completed" | "expired" | "picked_up" | "cancelled";
   created_at: string;
   seller: SellerCard;
   review: Review | null;

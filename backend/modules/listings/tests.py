@@ -1,5 +1,5 @@
 import json
-from datetime import date, time
+from datetime import date, time, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -198,6 +198,62 @@ class ListingsTests(TestCase):
         self.assertEqual(
             response.json(),
             {"listing": listing.as_api(), "order": order.as_api()},
+        )
+
+    def test_expired_listing_is_hidden_until_relisted(self):
+        listing = self._create_listing()
+        listing.expires_at = timezone.now() - timedelta(minutes=1)
+        listing.save(update_fields=["expires_at"])
+
+        browse = self.client.get("/api/listings/")
+        detail = self.client.get(f"/api/listings/{listing.pk}/")
+        self.assertEqual(
+            {"browse": browse.json(), "detail": detail.json(), "detail_status": detail.status_code},
+            {
+                "browse": {"listings": []},
+                "detail": {"detail": "not_found"},
+                "detail_status": 404,
+            },
+        )
+
+        with patch("modules.clerk.clerk_auth.authenticate_request") as mock_authenticate:
+            self._as_seller(mock_authenticate)
+            mine = _auth(self.client, "get", "/api/listings/mine/")
+            listing = Listing.objects.prefetch_related("orders").get(pk=listing.pk)
+            self.assertEqual(mine.json(), {"listings": [listing.as_api()]})
+            self.assertEqual(listing.as_api()["expired"], True)
+
+            relisted = _auth(self.client, "post", f"/api/listings/{listing.pk}/relist/")
+            listing = Listing.objects.prefetch_related("orders").get(pk=listing.pk)
+            self.assertEqual(relisted.status_code, 200)
+            self.assertEqual(relisted.json(), listing.as_api())
+            self.assertEqual(listing.as_api()["expired"], False)
+
+        listing = Listing.objects.prefetch_related("orders").get(pk=listing.pk)
+        browse = self.client.get("/api/listings/")
+        self.assertEqual(browse.json(), {"listings": [listing.as_api()]})
+
+    def test_browse_filters_by_neighbourhood_and_cuisine(self):
+        kensington = self._create_listing(cuisine="Thai")
+        mexican = self._create_listing(
+            dish_name="Birria tacos",
+            neighbourhood="Leslieville",
+            cuisine="Mexican",
+        )
+        by_hood = self.client.get("/api/listings/", {"neighbourhood": "kensington"})
+        by_cuisine = self.client.get("/api/listings/", {"cuisine": "Mexican"})
+        by_search = self.client.get("/api/listings/", {"q": "birria"})
+        self.assertEqual(
+            {
+                "hood": by_hood.json(),
+                "cuisine": by_cuisine.json(),
+                "search": by_search.json(),
+            },
+            {
+                "hood": {"listings": [kensington.as_api()]},
+                "cuisine": {"listings": [mexican.as_api()]},
+                "search": {"listings": [mexican.as_api()]},
+            },
         )
 
 

@@ -53,6 +53,7 @@ class User(models.Model):
             "first_logged_in": self.first_logged_in,
             "last_logged_in": self.last_logged_in,
             "seller": self._seller_api(),
+            "review": self._review_api(),
         }
         return json.loads(json.dumps(raw, cls=DjangoJSONEncoder))
 
@@ -61,3 +62,9 @@ class User(models.Model):
         if seller is None:
             return None
         return seller.as_api()
+
+    def _review_api(self) -> dict | None:
+        review = getattr(self, "seller_review", None)
+        if review is None:
+            return None
+        return review.as_api()

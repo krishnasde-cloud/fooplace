@@ -22,7 +22,14 @@ from modules.users.models import User
 from modules.users.user_sync import link_clerk_user
 
 # Liveness stays public so the SPA can check Django without a session.
-PUBLIC_API_PATHS = frozenset({"/api/health/", "/api/health"})
+PUBLIC_API_PATHS = frozenset(
+    {
+        "/api/health/",
+        "/api/health",
+        "/api/orders/expire/",
+        "/api/orders/expire",
+    }
+)
 
 
 def is_public_api(request) -> bool:
@@ -32,6 +39,8 @@ def is_public_api(request) -> bool:
     if request.method != "GET":
         return False
     path = request.path.rstrip("/")
+    if path == "/api/geoapify/autocomplete":
+        return True
     if path == "/api/listings":
         return True
     if path.startswith("/api/listings/"):

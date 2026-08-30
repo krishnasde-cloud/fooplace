@@ -9,10 +9,11 @@ from modules.reviews.models import Review
 from modules.users.models import User
 
 
+COMPLETED = {Order.Status.COMPLETED, Order.Status.PICKED_UP}
+
+
 def completed_orders_for(seller: User) -> int:
-    return Order.objects.filter(
-        listing__seller=seller, status=Order.Status.PICKED_UP
-    ).count()
+    return Order.objects.filter(listing__seller=seller, status__in=COMPLETED).count()
 
 
 def seller_card(user: User) -> dict:

@@ -2,7 +2,7 @@ from django.http import JsonResponse
 
 from modules.listings.models import Order
 from modules.reviews.models import Review
-from modules.reviews.profile import seller_card
+from modules.reviews.profile import COMPLETED, seller_card
 from modules.signup.complete import clean_text
 from modules.users.models import User
 
@@ -46,10 +46,10 @@ def complete_order(buyer: User, order_id) -> dict | JsonResponse:
     )
     if order is None:
         return JsonResponse({"detail": "not_found"}, status=404)
-    if order.status == Order.Status.CANCELLED:
+    if order.status in {Order.Status.CANCELLED, Order.Status.EXPIRED}:
         return JsonResponse({"detail": "invalid_status"}, status=400)
-    if order.status != Order.Status.PICKED_UP:
-        order.status = Order.Status.PICKED_UP
+    if order.status not in COMPLETED:
+        order.status = Order.Status.COMPLETED
         order.save(update_fields=["status"])
         order.refresh_from_db()
     return buyer_order_api(order)
@@ -78,7 +78,7 @@ def create_review(buyer: User, data: dict) -> dict | JsonResponse:
     )
     if order is None:
         return JsonResponse({"detail": "not_found"}, status=404)
-    if order.status != Order.Status.PICKED_UP:
+    if order.status not in COMPLETED:
         return JsonResponse({"detail": "order_not_completed"}, status=400)
     if Review.objects.filter(order=order).exists():
         return JsonResponse({"detail": "already_reviewed"}, status=400)

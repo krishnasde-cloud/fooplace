@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("signup", "0001_initial"),
+        ("signup", "0002_seller_pickup_address"),
     ]
 
     operations = [

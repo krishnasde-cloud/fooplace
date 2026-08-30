@@ -71,8 +71,18 @@ export function MarketplaceBrowse({
               </p>
               <p className="listing-meta">{listing.description}</p>
               {listing.seller ? (
-                <TrustSignals seller={listing.seller} onOpen={onOpenSeller} />
-              ) : null}
+                <TrustSignals
+                  seller={listing.seller}
+                  onOpen={
+                    onOpenSeller ??
+                    ((sellerId) => {
+                      window.location.hash = `#/sellers/${sellerId}`;
+                    })
+                  }
+                />
+              ) : (
+                <p className="listing-meta">{listing.seller_name}</p>
+              )}
               {onOrder ? (
                 <div className="listing-card-actions">
                   <button

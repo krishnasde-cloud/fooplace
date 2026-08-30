@@ -5,7 +5,14 @@ from clerk_backend_api.security.types import AuthStatus, RequestState
 from django.test import TestCase
 from django.utils import timezone
 
+from modules.geoapify.client import Place
 from modules.users.models import User
+
+QUEEN = Place(
+    formatted="123 Queen St W, Toronto, ON, Canada",
+    lat=43.652,
+    lon=-79.38,
+)
 
 
 def _signed_in(payload: dict) -> RequestState:
@@ -55,8 +62,9 @@ class SignupTests(TestCase):
             },
         )
 
+    @patch("modules.signup.complete.Geoapify.geocode", return_value=QUEEN)
     @patch("modules.clerk.clerk_auth.authenticate_request")
-    def test_seller_signup(self, mock_authenticate):
+    def test_seller_signup(self, mock_authenticate, _mock_geocode):
         mock_authenticate.return_value = _signed_in(
             {"sub": "user_abc", "sid": "sess_1"}
         )
@@ -69,6 +77,7 @@ class SignupTests(TestCase):
             "accepted_terms": True,
             "facebook_marketplace_url": "https://www.facebook.com/marketplace/profile/123",
             "etransfer_email": "payouts@example.com",
+            "pickup_address": "123 Queen St W, Toronto",
         }
         response = _auth_post(self.client, payload)
         self.user.refresh_from_db()
@@ -85,11 +94,17 @@ class SignupTests(TestCase):
                 "accepted_terms": True,
                 "facebook_marketplace_url": "https://www.facebook.com/marketplace/profile/123",
                 "etransfer_email": "payouts@example.com",
+                "pickup_address": QUEEN.formatted,
+                "pickup_lat": QUEEN.lat,
+                "pickup_lon": QUEEN.lon,
             },
         )
 
+    @patch("modules.signup.complete.Geoapify.geocode", return_value=QUEEN)
     @patch("modules.clerk.clerk_auth.authenticate_request")
-    def test_seller_signup_accepts_pasted_marketplace_url(self, mock_authenticate):
+    def test_seller_signup_accepts_pasted_marketplace_url(
+        self, mock_authenticate, _mock_geocode
+    ):
         mock_authenticate.return_value = _signed_in(
             {"sub": "user_abc", "sid": "sess_1"}
         )
@@ -101,6 +116,7 @@ class SignupTests(TestCase):
             "accepted_terms": True,
             "facebook_marketplace_url": "\u200bfacebook.com/marketplace/profile/123",
             "etransfer_email": "payouts@example.com",
+            "pickup_address": "123 Queen St W, Toronto",
         }
         response = _auth_post(self.client, payload)
         self.user.refresh_from_db()
@@ -117,8 +133,35 @@ class SignupTests(TestCase):
                 "accepted_terms": True,
                 "facebook_marketplace_url": "https://facebook.com/marketplace/profile/123",
                 "etransfer_email": "payouts@example.com",
+                "pickup_address": QUEEN.formatted,
+                "pickup_lat": QUEEN.lat,
+                "pickup_lon": QUEEN.lon,
             },
         )
+
+    @patch("modules.signup.complete.Geoapify.geocode", return_value=None)
+    @patch("modules.clerk.clerk_auth.authenticate_request")
+    def test_seller_signup_rejects_unknown_address(
+        self, mock_authenticate, _mock_geocode
+    ):
+        mock_authenticate.return_value = _signed_in(
+            {"sub": "user_abc", "sid": "sess_1"}
+        )
+        response = _auth_post(
+            self.client,
+            {
+                "type": "seller",
+                "name": "Priya Shah",
+                "neighbourhood": "Kensington",
+                "has_food_handler_certification": True,
+                "accepted_terms": True,
+                "facebook_marketplace_url": "https://www.facebook.com/marketplace/profile/123",
+                "etransfer_email": "payouts@example.com",
+                "pickup_address": "not a real place",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"detail": "invalid_pickup_address"})
 
     @patch("modules.clerk.clerk_auth.authenticate_request")
     def test_seller_must_accept_terms(self, mock_authenticate):

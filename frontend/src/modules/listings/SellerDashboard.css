@@ -101,7 +101,8 @@
   color: var(--accent);
 }
 
-.listing-status.sold {
+.listing-status.sold,
+.listing-status.expired {
   background: var(--code-bg);
   color: var(--text);
 }
@@ -122,6 +123,12 @@
   color: var(--text-h);
   background: transparent;
   border: 1px solid var(--border);
+}
+
+.listing-card-actions button.relist {
+  color: #fff;
+  background: #6c47ff;
+  border-color: transparent;
 }
 
 .listing-card-actions button.danger {

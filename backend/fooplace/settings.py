@@ -85,6 +85,8 @@ CLERK_PUBLISHABLE_KEY = os.environ.get("CLERK_PUBLISHABLE_KEY") or os.environ.ge
 )
 # Optional PEM public key for networkless verification (Dashboard → API keys).
 CLERK_JWT_KEY = os.environ.get("CLERK_JWT_KEY") or None
+# Server-only. Used to geocode seller pickup addresses.
+GEOAPIFY_API_KEY = os.environ.get("GEOAPIFY_API_KEY", "")
 # Frontend origins allowed in the session token azp claim.
 # Include every Vercel host (unique deploy URL + production / branch aliases).
 CLERK_AUTHORIZED_PARTIES = _csv_env(
@@ -132,6 +134,10 @@ STATIC_URL = "static/"
 STATIC_ROOT = Path(os.environ.get("DJANGO_STATIC_ROOT", str(BASE_DIR / "staticfiles")))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Seller must confirm a pending order within this window or it expires.
+ORDER_CONFIRM_HOURS = int(os.environ.get("ORDER_CONFIRM_HOURS", "4"))
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "fooplace@localhost")
 
 MAILERS = {
     "default": {

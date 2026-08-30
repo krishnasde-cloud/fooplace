@@ -23,6 +23,14 @@ export default defineConfig({
         target: process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000",
         changeOrigin: true,
       },
+      "/admin": {
+        target: process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
+      "/static": {
+        target: process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
     },
   },
   build: {

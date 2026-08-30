@@ -1,7 +1,10 @@
 import { useAuth } from "@clerk/react";
-import { BuyerOrders, SellerProfilePage, localReviews, publicSellerProfile, reviewsApi } from "@/modules/reviews/index.ts";
-import { loadPendingSignup } from "@/modules/signup/pending.ts";
 import { useEffect, useMemo, useState } from "react";
+import { SellerHold } from "@/modules/backoffice/index.ts";
+import type { SellerReview } from "@/modules/backoffice/index.ts";
+import { loadPendingSignup } from "@/modules/signup/pending.ts";
+import { BuyerNotifications, IncomingOrders } from "@/modules/orders/index.ts";
+import { apiOrderSource, localSource as localOrders } from "@/modules/orders/local.ts";
 import { apiSource, publicBrowse } from "./api.ts";
 import { localSource } from "./local.ts";
 import { MarketplaceBrowse } from "./MarketplaceBrowse.tsx";
@@ -12,9 +15,8 @@ const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 type MeResponse = {
   id: number;
   type: "buyer" | "seller" | "admin" | "";
+  review: SellerReview | null;
 };
-
-type Page = { name: "home" } | { name: "profile"; sellerId: number } | { name: "orders" };
 
 export function ListingsHome() {
   if (publishableKey) {
@@ -25,50 +27,22 @@ export function ListingsHome() {
 
 function LocalListingsHome() {
   const source = useMemo(() => localSource(), []);
-  const reviews = useMemo(() => localReviews(), []);
-  const publicSource = useMemo(() => ({ listActive: publicBrowse }), []);
-  const pending = loadPendingSignup();
-  const isSeller = pending?.type === "seller";
-  const isBuyer = pending?.type === "buyer";
-  const [page, setPage] = useState<Page>({ name: "home" });
-  const profileSource = page.name === "profile" && page.sellerId < 0
-    ? reviews
-    : { sellerProfile: publicSellerProfile };
-
-  if (page.name === "profile") {
+  const orders = useMemo(() => localOrders(), []);
+  const seller = loadPendingSignup()?.type === "seller";
+  if (seller) {
     return (
-      <SellerProfilePage
-        sellerId={Math.abs(page.sellerId)}
-        source={profileSource}
-        onBack={() => setPage({ name: "home" })}
-      />
+      <>
+        <IncomingOrders source={orders} />
+        <SellerDashboard
+          source={source}
+          onPublicProfile={() => {
+            window.location.hash = "#/sellers/local";
+          }}
+        />
+      </>
     );
   }
-  if (page.name === "orders") {
-    return (
-      <BuyerOrders
-        source={reviews}
-        onBack={() => setPage({ name: "home" })}
-        onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
-      />
-    );
-  }
-  if (isSeller) {
-    return (
-      <SellerDashboard
-        source={source}
-        onPublicProfile={() => setPage({ name: "profile", sellerId: -1 })}
-      />
-    );
-  }
-  return (
-    <MarketplaceBrowse
-      source={publicSource}
-      onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
-      onOrder={isBuyer ? (listing) => reviews.placeOrder(listing.id, 1, listing.dish_name) : undefined}
-      onOrders={isBuyer ? () => setPage({ name: "orders" }) : undefined}
-    />
-  );
+  return <MarketplaceBrowse source={source} />;
 }
 
 function ClerkListingsHome() {
@@ -76,7 +50,6 @@ function ClerkListingsHome() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [token, setToken] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState<Page>({ name: "home" });
   const publicSource = useMemo(
     () => ({
       listActive: publicBrowse,
@@ -118,12 +91,12 @@ function ClerkListingsHome() {
   }, [getToken, isSignedIn]);
 
   const source = useMemo(() => (token ? apiSource(token) : null), [token]);
-  const reviews = useMemo(
-    () => (token ? reviewsApi(token) : { sellerProfile: publicSellerProfile }),
-    [token],
-  );
-  const isSeller = me?.type === "seller" || me?.type === "admin";
-  const isBuyer = me?.type === "buyer";
+  const orderSource = useMemo(() => apiOrderSource(token), [token]);
+  const review = me?.review;
+  const sellerBlocked =
+    me?.type === "seller" &&
+    Boolean(review && (review.status !== "approved" || review.removed));
+  const isSeller = (me?.type === "seller" && !sellerBlocked) || me?.type === "admin";
 
   if (error) {
     return (
@@ -139,44 +112,55 @@ function ClerkListingsHome() {
       </section>
     );
   }
-  if (page.name === "profile") {
+  if (sellerBlocked && review?.removed) {
     return (
-      <SellerProfilePage
-        sellerId={page.sellerId}
-        source={reviews}
-        onBack={() => setPage({ name: "home" })}
+      <SellerHold
+        title="Seller account removed"
+        message="An admin removed this seller account. Contact Fooplace if you think this was a mistake."
       />
     );
   }
-  if (page.name === "orders" && token) {
+  if (sellerBlocked && review?.status === "rejected") {
     return (
-      <BuyerOrders
-        source={reviewsApi(token)}
-        onBack={() => setPage({ name: "home" })}
-        onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
+      <>
+        <SellerHold
+          title="Seller application rejected"
+          message="An admin reviewed this seller account and did not approve it. You can still browse as a buyer."
+        />
+        {token ? <BuyerNotifications token={token} /> : null}
+        <MarketplaceBrowse source={source ?? publicSource} />
+      </>
+    );
+  }
+  if (sellerBlocked && review?.status === "pending") {
+    return (
+      <SellerHold
+        title="Waiting for approval"
+        message="Thanks for signing up as a seller. An admin will approve or reject this account before you can publish listings."
       />
     );
   }
   if (isSignedIn && isSeller && source) {
     return (
-      <SellerDashboard
-        source={source}
-        onPublicProfile={
-          me?.id ? () => setPage({ name: "profile", sellerId: me.id }) : undefined
-        }
-      />
+      <>
+        <IncomingOrders source={orderSource} />
+        <SellerDashboard
+          source={source}
+          onPublicProfile={
+            me?.id
+              ? () => {
+                  window.location.hash = `#/sellers/${me.id}`;
+                }
+              : undefined
+          }
+        />
+      </>
     );
   }
   return (
-    <MarketplaceBrowse
-      source={source ?? publicSource}
-      onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
-      onOrder={
-        isBuyer && token
-          ? (listing) => reviewsApi(token).placeOrder(listing.id, 1, listing.dish_name)
-          : undefined
-      }
-      onOrders={isBuyer ? () => setPage({ name: "orders" }) : undefined}
-    />
+    <>
+      {token ? <BuyerNotifications token={token} /> : null}
+      <MarketplaceBrowse source={source ?? publicSource} />
+    </>
   );
 }

@@ -7,6 +7,7 @@ from clerk_backend_api.security.types import AuthStatus, RequestState
 from django.test import TestCase
 from django.utils import timezone
 
+from modules.backoffice.models import SellerReview
 from modules.listings.models import Listing, Order
 from modules.reviews.models import Review
 from modules.reviews.profile import seller_public_api
@@ -53,6 +54,10 @@ class ReviewsTests(TestCase):
             facebook_marketplace_url="https://www.facebook.com/marketplace/profile/1",
             etransfer_email="payouts@example.com",
         )
+        SellerReview.objects.update_or_create(
+            user=self.seller,
+            defaults={"status": SellerReview.Status.APPROVED},
+        )
         self.buyer = User.objects.create(
             user_id="user_buyer",
             name="Asha Patel",
@@ -83,7 +88,7 @@ class ReviewsTests(TestCase):
             listing=self.listing,
             buyer=self.buyer,
             quantity=1,
-            status=Order.Status.PICKED_UP,
+            status=Order.Status.COMPLETED,
         )
         Review.objects.create(
             order=order,
@@ -102,27 +107,27 @@ class ReviewsTests(TestCase):
         placed = _auth(
             self.client,
             "post",
-            f"/api/listings/{self.listing.pk}/orders/",
-            {"quantity": 1},
+            "/api/orders/",
+            {"listing_id": self.listing.pk, "quantity": 1},
         )
-        order = Order.objects.get()
+        order = (
+            Order.objects.select_related(
+                "listing",
+                "listing__seller",
+                "listing__seller__seller_profile",
+                "buyer",
+            )
+            .prefetch_related("history")
+            .get()
+        )
         self.assertEqual(placed.status_code, 201)
-        self.assertEqual(
-            placed.json(),
-            {
-                "listing": Listing.objects.prefetch_related("orders")
-                .select_related("seller", "seller__seller_profile")
-                .get(pk=self.listing.pk)
-                .as_api(),
-                "order": order.as_api(),
-            },
-        )
+        self.assertEqual(placed.json(), order.as_api())
 
         completed = _auth(
             self.client, "post", f"/api/reviews/orders/{order.pk}/complete/"
         )
         order.refresh_from_db()
-        self.assertEqual(order.status, Order.Status.PICKED_UP)
+        self.assertEqual(order.status, Order.Status.COMPLETED)
         self.assertEqual(completed.status_code, 200)
 
         reviewed = _auth(
