@@ -35,11 +35,11 @@ export default defineConfig({
       },
       "/sitemap.xml": {
         target: api,
-        changeOrigin: true,
+        changeOrigin: false,
       },
       "/robots.txt": {
         target: api,
-        changeOrigin: true,
+        changeOrigin: false,
       },
     },
   },
