@@ -82,7 +82,7 @@ The SPA calls `GET /api/health/`. With both servers running, Vite proxies that p
 bazel run //backend:manage -- promoteadmin you@example.com
 ```
 
-Locally open http://localhost:8000/admin/. On Vercel the same path is routed to Django. Admins can view and edit every model registered from `backend/modules/`.
+Locally open http://localhost:5173/admin/ (Vite proxies it) or http://localhost:8000/admin/. On Vercel the same path is routed to Django. The admin back office is where staff approve or reject new sellers, view every listing and order, and flag or remove a seller or listing.
 
 ## Deploy to Vercel
 

@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from modules.backoffice.access import hidden_from_marketplace, listing_is_hidden, seller_can_list
 from modules.listings.models import Listing, Order, deposit_for
 from modules.listings.payload import listing_fields_from
 from modules.users.models import User
@@ -27,11 +28,15 @@ def _seller_or_error(request) -> User | JsonResponse:
     record = request.user.record
     if record.user_type not in {User.UserType.SELLER, User.UserType.ADMIN}:
         return JsonResponse({"detail": "seller_required"}, status=403)
+    if not seller_can_list(record):
+        return JsonResponse({"detail": "seller_not_approved"}, status=403)
     return record
 
 
 def _listings_qs():
-    return Listing.objects.select_related("seller").prefetch_related(
+    return Listing.objects.select_related(
+        "seller", "seller__seller_review", "moderation"
+    ).prefetch_related(
         Prefetch("orders", queryset=Order.objects.order_by("created_at"))
     )
 
@@ -40,7 +45,12 @@ def _listings_qs():
 @require_http_methods(["GET", "POST"])
 def collection(request):
     if request.method == "GET":
-        listings = _listings_qs().filter(status=Listing.Status.ACTIVE).order_by("-created_at")
+        listings = (
+            _listings_qs()
+            .filter(status=Listing.Status.ACTIVE)
+            .exclude(hidden_from_marketplace())
+            .order_by("-created_at")
+        )
         neighbourhood = (request.GET.get("neighbourhood") or "").strip()
         cuisine = (request.GET.get("cuisine") or "").strip()
         query = (request.GET.get("q") or "").strip()
@@ -87,6 +97,8 @@ def detail(request, listing_id: int):
         return JsonResponse({"detail": "not_found"}, status=404)
 
     if request.method == "GET":
+        if listing_is_hidden(listing):
+            return JsonResponse({"detail": "not_found"}, status=404)
         return JsonResponse(listing.as_api())
 
     seller = _seller_or_error(request)
@@ -141,7 +153,7 @@ def create_order(request, listing_id: int):
             .filter(pk=listing_id, status=Listing.Status.ACTIVE)
             .first()
         )
-        if listing is None:
+        if listing is None or listing_is_hidden(listing):
             return JsonResponse({"detail": "not_found"}, status=404)
         if listing.seller_id == buyer.pk:
             return JsonResponse({"detail": "own_listing"}, status=400)

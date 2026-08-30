@@ -1,5 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useEffect, useMemo, useState } from "react";
+import { SellerHold } from "@/modules/backoffice/index.ts";
+import type { SellerReview } from "@/modules/backoffice/index.ts";
 import { loadPendingSignup } from "@/modules/signup/pending.ts";
 import { apiSource, publicBrowse } from "./api.ts";
 import { localSource } from "./local.ts";
@@ -10,6 +12,7 @@ const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 type MeResponse = {
   type: "buyer" | "seller" | "admin" | "";
+  review: SellerReview | null;
 };
 
 export function ListingsHome() {
@@ -74,7 +77,11 @@ function ClerkListingsHome() {
   }, [getToken, isSignedIn]);
 
   const source = useMemo(() => (token ? apiSource(token) : null), [token]);
-  const isSeller = me?.type === "seller" || me?.type === "admin";
+  const review = me?.review;
+  const sellerBlocked =
+    me?.type === "seller" &&
+    Boolean(review && (review.status !== "approved" || review.removed));
+  const isSeller = (me?.type === "seller" && !sellerBlocked) || me?.type === "admin";
 
   if (error) {
     return (
@@ -83,15 +90,42 @@ function ClerkListingsHome() {
       </section>
     );
   }
-  if (isSignedIn && isSeller && source) {
-    return <SellerDashboard source={source} />;
-  }
   if (isSignedIn && !me) {
     return (
       <section className="listings-page">
         <p className="listings-lead">Loading your listings…</p>
       </section>
     );
+  }
+  if (sellerBlocked && review?.removed) {
+    return (
+      <SellerHold
+        title="Seller account removed"
+        message="An admin removed this seller account. Contact Fooplace if you think this was a mistake."
+      />
+    );
+  }
+  if (sellerBlocked && review?.status === "rejected") {
+    return (
+      <>
+        <SellerHold
+          title="Seller application rejected"
+          message="An admin reviewed this seller account and did not approve it. You can still browse as a buyer."
+        />
+        <MarketplaceBrowse source={source ?? publicSource} />
+      </>
+    );
+  }
+  if (sellerBlocked && review?.status === "pending") {
+    return (
+      <SellerHold
+        title="Waiting for approval"
+        message="Thanks for signing up as a seller. An admin will approve or reject this account before you can publish listings."
+      />
+    );
+  }
+  if (isSignedIn && isSeller && source) {
+    return <SellerDashboard source={source} />;
   }
   return <MarketplaceBrowse source={source ?? publicSource} />;
 }
