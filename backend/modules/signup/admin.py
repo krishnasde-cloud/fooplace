@@ -11,5 +11,6 @@ class SellerProfileAdmin(StaffModelAdmin, admin.ModelAdmin):
         "has_food_handler_certification",
         "accepted_terms",
         "etransfer_email",
+        "pickup_address",
     )
-    search_fields = ("user__email", "user__user_id", "etransfer_email")
+    search_fields = ("user__email", "user__user_id", "etransfer_email", "pickup_address")

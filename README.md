@@ -105,8 +105,9 @@ Credentials live in the GitHub Environment **Vercel-prod** (`VERCEL_TOKEN`, `VER
 
 Clerk is the only authentication method. The React header signs users in; Django
 verifies the Clerk session JWT (`clerk-backend-api`) and rejects password /
-session login. `GET /api/health/` stays public; every other `/api/` route needs
-a valid session token.
+session login. `GET /api/health/` and `GET /api/geoapify/autocomplete/` stay
+public (so sellers can pick a pickup address before they have a session).
+Other `/api/` writes need a valid session token.
 
 ### Env vars (Vercel Production + Preview)
 
@@ -119,6 +120,7 @@ Django runs on Vercel, so these are project env vars (not frontend-only):
 | `CLERK_AUTHORIZED_PARTIES` | Already set | Comma-separated frontend origins for the token `azp` claim. Django also allows `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, and the request Origin/Host so the production alias matches. Include the Django origin (`http://localhost:8000`) if you sign in on `/admin/`. |
 | `CLERK_PUBLISHABLE_KEY` | No | Optional. Django admin login embeds Clerk when this (or `VITE_CLERK_PUBLISHABLE_KEY`) is set. |
 | `CLERK_JWT_KEY` | No | Optional PEM public key for networkless JWT verification. |
+| `GEOAPIFY_API_KEY` | Yes for seller signup | Server-only. Django uses this to autocomplete and geocode a seller's pickup address. Never expose to the browser. |
 
 Also add your Vercel URL in the Clerk dashboard under **Configure → Domains**.
 

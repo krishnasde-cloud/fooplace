@@ -33,6 +33,7 @@ services:
       CLERK_JWT_KEY: ${CLERK_JWT_KEY:-}
       CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-}
       CLERK_AUTHORIZED_PARTIES: ${CLERK_AUTHORIZED_PARTIES:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000}
+      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

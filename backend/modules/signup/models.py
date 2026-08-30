@@ -13,6 +13,9 @@ class SellerProfile(models.Model):
     accepted_terms = models.BooleanField(default=False)
     facebook_marketplace_url = models.URLField(max_length=500)
     etransfer_email = models.EmailField()
+    pickup_address = models.CharField(max_length=500, blank=True)
+    pickup_lat = models.FloatField(null=True, blank=True)
+    pickup_lon = models.FloatField(null=True, blank=True)
 
     def as_api(self) -> dict:
         return {
@@ -20,4 +23,7 @@ class SellerProfile(models.Model):
             "accepted_terms": self.accepted_terms,
             "facebook_marketplace_url": self.facebook_marketplace_url,
             "etransfer_email": self.etransfer_email,
+            "pickup_address": self.pickup_address,
+            "pickup_lat": self.pickup_lat,
+            "pickup_lon": self.pickup_lon,
         }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PickupAddressField } from "@/modules/geoapify/index.ts";
 import type { AccountType, SignupPayload } from "./types.ts";
 import "./SignupForm.css";
 
@@ -23,6 +24,7 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
     initial?.facebook_marketplace_url ?? "",
   );
   const [etransferEmail, setEtransferEmail] = useState(initial?.etransfer_email ?? "");
+  const [pickupAddress, setPickupAddress] = useState(initial?.pickup_address ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -40,8 +42,9 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
     }
     const marketplaceUrl = cleanText(facebookMarketplaceUrl);
     const payoutEmail = cleanText(etransferEmail);
-    if (!marketplaceUrl || !payoutEmail) {
-      setError("Sellers must add a Facebook Marketplace URL and an e-transfer email.");
+    const address = cleanText(pickupAddress);
+    if (!marketplaceUrl || !payoutEmail || !address) {
+      setError("Sellers must add a Marketplace URL, e-transfer email, and pickup address.");
       return null;
     }
     return {
@@ -52,6 +55,7 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
         ? marketplaceUrl
         : `https://${marketplaceUrl}`,
       etransfer_email: payoutEmail,
+      pickup_address: address,
     };
   }
 
@@ -139,6 +143,7 @@ export function SignupForm({ initial, submitLabel, onSubmit, onCancel }: SignupF
               required
             />
           </label>
+          <PickupAddressField value={pickupAddress} onChange={setPickupAddress} />
         </fieldset>
       ) : null}
 

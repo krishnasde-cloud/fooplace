@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email
 from django.http import JsonResponse
 
+from modules.geoapify.client import Geoapify, GeoapifyError
 from modules.signup.models import SellerProfile
 from modules.users.models import User
 
@@ -47,11 +48,21 @@ def seller_fields_from(data: dict) -> tuple[dict | None, JsonResponse | None]:
 
     url = marketplace_url(clean_text(data.get("facebook_marketplace_url")))
     email = clean_text(data.get("etransfer_email"))
+    address = clean_text(data.get("pickup_address"))
     try:
         URLValidator()(url)
         validate_email(email)
     except ValidationError:
         return None, JsonResponse({"detail": "invalid_seller_details"}, status=400)
+    if not address:
+        return None, JsonResponse({"detail": "invalid_seller_details"}, status=400)
+
+    try:
+        place = Geoapify().geocode(address)
+    except GeoapifyError:
+        return None, JsonResponse({"detail": "geocode_unavailable"}, status=503)
+    if place is None:
+        return None, JsonResponse({"detail": "invalid_pickup_address"}, status=400)
 
     return (
         {
@@ -61,6 +72,9 @@ def seller_fields_from(data: dict) -> tuple[dict | None, JsonResponse | None]:
             "accepted_terms": True,
             "facebook_marketplace_url": url,
             "etransfer_email": email,
+            "pickup_address": place.formatted,
+            "pickup_lat": place.lat,
+            "pickup_lon": place.lon,
         },
         None,
     )

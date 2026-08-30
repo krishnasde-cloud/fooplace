@@ -39,6 +39,8 @@ def is_public_api(request) -> bool:
     if request.method != "GET":
         return False
     path = request.path.rstrip("/")
+    if path == "/api/geoapify/autocomplete":
+        return True
     if path == "/api/listings":
         return True
     rest = path.removeprefix("/api/listings/")
