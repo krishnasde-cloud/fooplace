@@ -88,7 +88,8 @@ export function SignupForm({
   function run(action: () => Promise<void> | void) {
     setError(null);
     setPending(true);
-    Promise.resolve(action())
+    Promise.resolve()
+      .then(action)
       .catch((submitError: unknown) => {
         setError(submitError instanceof Error ? submitError.message : "Signup failed.");
       })
@@ -100,7 +101,9 @@ export function SignupForm({
       <h1>Create your Fooplace account</h1>
       <p className="signup-lead">
         {showSocial
-          ? "Continue with Google or Facebook, or create an account with email."
+          ? showEmail
+            ? "Continue with Google or Facebook, or create an account with email."
+            : "Continue with Google or Facebook, or choose buyer or seller."
           : "Tell us how you will use Fooplace."}
       </p>
 
@@ -126,6 +129,8 @@ export function SignupForm({
           </button>
         </div>
       ) : null}
+
+      {error ? <p className="signup-error">{error}</p> : null}
 
       <form
         onSubmit={(event) => {
@@ -239,8 +244,6 @@ export function SignupForm({
             </label>
           </fieldset>
         ) : null}
-
-        {error ? <p className="signup-error">{error}</p> : null}
 
         {showSubmit || onCancel ? (
           <div className="signup-actions">
