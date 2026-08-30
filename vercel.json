@@ -29,6 +29,26 @@
           "args": "/api/$1"
         }
       ]
+    },
+    {
+      "src": "^/(sitemap\\.xml|robots\\.txt)$",
+      "dest": "/api"
+    },
+    {
+      "src": "^/listings(/.*)?$",
+      "dest": "/api"
+    },
+    {
+      "src": "^/sellers/\\d+/?$",
+      "dest": "/api"
+    },
+    {
+      "src": "^/$",
+      "dest": "/api"
+    },
+    {
+      "src": "^/(sell|orders)(/.*)?$",
+      "dest": "/index.html"
     }
   ]
 }

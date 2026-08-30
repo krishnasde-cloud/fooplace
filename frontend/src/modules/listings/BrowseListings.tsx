@@ -1,14 +1,28 @@
 import { useEffect, useState } from "react";
-import { money } from "@/shared/format.ts";
+import { ListingCard, usePublicSeo } from "@/modules/seo/index.ts";
+import { readSsrData } from "@/modules/seo/ssrData.ts";
 import { fetchListings } from "./api.ts";
 import type { Listing, ListingCatalog } from "./types.ts";
 import "./BrowseListings.css";
+
+function catalogFrom(listings: Listing[]): ListingCatalog {
+  return {
+    listings,
+    filters: {
+      neighbourhoods: [...new Set(listings.map((item) => item.neighbourhood).filter(Boolean))].sort(),
+      cuisines: [...new Set(listings.map((item) => item.cuisine).filter(Boolean))].sort(),
+    },
+  };
+}
 
 export function BrowseListings() {
   const [neighbourhood, setNeighbourhood] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [query, setQuery] = useState("");
-  const [catalog, setCatalog] = useState<ListingCatalog | null>(null);
+  const [catalog, setCatalog] = useState<ListingCatalog | null>(() => {
+    const listings = readSsrData()?.listings;
+    return listings ? catalogFrom(listings) : null;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,6 +43,8 @@ export function BrowseListings() {
       });
     return () => controller.abort();
   }, [neighbourhood, cuisine, query]);
+
+  usePublicSeo("/", { listings: catalog?.listings ?? [] });
 
   return (
     <section className="browse">
@@ -82,35 +98,5 @@ export function BrowseListings() {
         </ul>
       ) : null}
     </section>
-  );
-}
-
-function ListingCard({ listing }: { listing: Listing }) {
-  const photo = listing.photos[0];
-  return (
-    <li>
-      <a className="listing-card" href={`#/listings/${listing.id}`}>
-        {photo ? (
-          <img src={photo} alt={listing.dish_name} />
-        ) : (
-          <div className="listing-photo-fallback">No photo</div>
-        )}
-        <h2>{listing.dish_name}</h2>
-        <p className="listing-meta">
-          {listing.cuisine} · {listing.neighbourhood}
-          {listing.sold_out ? " · Sold out" : ""}
-        </p>
-        <p className="listing-meta">
-          {listing.seller
-            ? `${listing.seller.name}${listing.seller.has_food_handler_certification ? " · Food handler certified" : ""}${
-                listing.seller.average_rating != null
-                  ? ` · ★ ${listing.seller.average_rating.toFixed(1)}`
-                  : ""
-              }`
-            : listing.seller_name}
-        </p>
-        <p className="listing-price">{money(listing.price)}</p>
-      </a>
-    </li>
   );
 }

@@ -3,25 +3,27 @@ import { AuthHeader } from "@/modules/clerk/index.ts";
 import { BrowseListings, ListingDetail, ListingsHome } from "@/modules/listings/index.ts";
 import { BuyerOrders, OrderStatus } from "@/modules/orders/index.ts";
 import { SellerProfilePage, localReviews, publicSellerProfile } from "@/modules/reviews/index.ts";
+import { PageSeo } from "@/modules/seo/index.ts";
 import { SignupGate } from "@/modules/signup/index.ts";
-import { useHashRoute } from "./route.ts";
+import { paths, useRoute } from "./route.ts";
 import "./App.css";
 
 function App() {
   const [signupOpen, setSignupOpen] = useState(false);
-  const route = useHashRoute();
+  const route = useRoute();
 
   return (
     <>
+      <PageSeo route={route} />
       <div className="app-top">
         <nav className="app-nav">
-          <a href="#/" className={route.page === "browse" || route.page === "listing" ? "active" : undefined}>
+          <a href={paths.browse} className={route.page === "browse" || route.page === "listing" ? "active" : undefined}>
             Browse
           </a>
-          <a href="#/sell" className={route.page === "sell" ? "active" : undefined}>
+          <a href={paths.sell} className={route.page === "sell" ? "active" : undefined}>
             Sell
           </a>
-          <a href="#/orders" className={route.page === "orders" || route.page === "order" ? "active" : undefined}>
+          <a href={paths.orders} className={route.page === "orders" || route.page === "order" ? "active" : undefined}>
             My orders
           </a>
         </nav>
@@ -37,8 +39,9 @@ function App() {
           <SellerProfilePage
             sellerId={route.id === "local" ? 1 : route.id}
             source={route.id === "local" ? localReviews() : { sellerProfile: publicSellerProfile }}
+            indexable={route.id !== "local"}
             onBack={() => {
-              window.location.hash = "#/";
+              window.location.assign(paths.browse);
             }}
           />
         ) : null}

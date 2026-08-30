@@ -56,7 +56,7 @@ function ClerkPlaceOrder({ listing }: { listing: Listing }) {
         throw new Error("Clerk session token missing");
       }
       const order = await placeOrder(token, listing.id, quantity);
-      window.location.hash = `#/orders/${order.id}`;
+      window.location.assign(`/orders/${order.id}/`);
     } catch (submitError: unknown) {
       setError(submitError instanceof Error ? submitError.message : "Could not place order.");
     } finally {

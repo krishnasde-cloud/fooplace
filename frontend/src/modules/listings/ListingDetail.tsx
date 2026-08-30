@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
+import { paths } from "@/app/route.ts";
 import { PlaceOrder } from "@/modules/orders/PlaceOrder.tsx";
-import { TrustSignals } from "@/modules/reviews/index.ts";
-import { money, pickupWindow } from "@/shared/format.ts";
+import { PublicListing, usePublicSeo } from "@/modules/seo/index.ts";
+import { readSsrData } from "@/modules/seo/ssrData.ts";
 import { fetchListing } from "./api.ts";
 import type { Listing } from "./types.ts";
 import "./ListingDetail.css";
 
 export function ListingDetail({ id }: { id: number }) {
-  const [listing, setListing] = useState<Listing | null>(null);
+  const [listing, setListing] = useState<Listing | null>(() => {
+    const ssr = readSsrData()?.listing;
+    return ssr?.id === id ? ssr : null;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,10 +30,12 @@ export function ListingDetail({ id }: { id: number }) {
     return () => controller.abort();
   }, [id]);
 
+  usePublicSeo(paths.listing(id), { listing }, Boolean(listing) || Boolean(error));
+
   if (error) {
     return (
       <section className="listing-detail">
-        <a className="listing-back" href="#/">
+        <a className="listing-back" href={paths.browse}>
           ← Browse listings
         </a>
         <p className="listing-status">{error}</p>
@@ -45,46 +51,8 @@ export function ListingDetail({ id }: { id: number }) {
   }
 
   return (
-    <section className="listing-detail">
-      <a className="listing-back" href="#/">
-        ← Browse listings
-      </a>
-      <h1>{listing.dish_name}</h1>
-      {listing.photos.length > 0 ? (
-        <ul className="listing-photos">
-          {listing.photos.map((photo) => (
-            <li key={photo}>
-              <img src={photo} alt={listing.dish_name} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="listing-photo-fallback">No photos yet</div>
-      )}
-      <p>{listing.description}</p>
-      <dl className="listing-facts">
-        <dt>Price</dt>
-        <dd>{money(listing.price)}</dd>
-        <dt>Seller</dt>
-        <dd>
-          {listing.seller ? (
-            <a href={`#/sellers/${listing.seller.id}`}>
-              <TrustSignals seller={listing.seller} />
-            </a>
-          ) : (
-            listing.seller_name
-          )}
-        </dd>
-        <dt>Cuisine</dt>
-        <dd>{listing.cuisine}</dd>
-        <dt>Pickup neighbourhood</dt>
-        <dd>{listing.neighbourhood}</dd>
-        <dt>Pickup window</dt>
-        <dd>{pickupWindow(listing.pickup_start, listing.pickup_end)}</dd>
-        <dt>Available</dt>
-        <dd>{listing.sold_out ? "Sold out" : `${listing.quantity_available} left`}</dd>
-      </dl>
+    <PublicListing listing={listing}>
       <PlaceOrder listing={listing} />
-    </section>
+    </PublicListing>
   );
 }

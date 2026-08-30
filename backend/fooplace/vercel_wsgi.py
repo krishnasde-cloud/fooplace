@@ -20,8 +20,24 @@ def _normalize(path: str) -> str:
     return path
 
 
+def _is_seo_path(path: str) -> bool:
+    if path in {"/", "/sitemap.xml", "/robots.txt"}:
+        return True
+    if path == "/listings" or path.startswith("/listings/"):
+        return True
+    if path == "/sellers" or path.startswith("/sellers/"):
+        return True
+    return False
+
+
 def _is_django_path(path: str) -> bool:
-    return path == "/api" or path.startswith("/api/") or path == "/admin" or path.startswith("/admin/")
+    return (
+        path == "/api"
+        or path.startswith("/api/")
+        or path == "/admin"
+        or path.startswith("/admin/")
+        or _is_seo_path(path)
+    )
 
 
 def django_path_info(environ: dict) -> str:

@@ -37,3 +37,20 @@ def module_urlpatterns():
         prefix = getattr(config, "api_prefix", short)
         patterns.append(path(f"api/{prefix}/", include((f"{name}.urls", short))))
     return patterns
+
+
+def module_page_urlpatterns():
+    """Mount modules that have ``page_urls.py`` at the site root.
+
+    Used for public HTML (listing pages, sitemap, robots) so crawlers do not
+    need the ``/api/`` prefix.
+    """
+    from django.urls import include, path
+
+    patterns = []
+    for name in iter_module_names():
+        short = name.rsplit(".", 1)[-1]
+        if not (MODULES_ROOT / short / "page_urls.py").is_file():
+            continue
+        patterns.append(path("", include((f"{name}.page_urls", f"{short}-pages"))))
+    return patterns

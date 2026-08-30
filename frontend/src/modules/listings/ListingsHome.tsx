@@ -36,7 +36,7 @@ function LocalListingsHome() {
         <SellerDashboard
           source={source}
           onPublicProfile={() => {
-            window.location.hash = "#/sellers/local";
+            window.location.assign("/sellers/local");
           }}
         />
       </>
@@ -149,7 +149,7 @@ function ClerkListingsHome() {
           onPublicProfile={
             me?.id
               ? () => {
-                  window.location.hash = `#/sellers/${me.id}`;
+                  window.location.assign(`/sellers/${me.id}/`);
                 }
               : undefined
           }

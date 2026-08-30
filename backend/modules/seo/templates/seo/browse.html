@@ -1,0 +1,23 @@
+{% extends "seo/base.html" %}
+{% block content %}
+<section class="browse">
+  <h1>Home-cooked near you</h1>
+  <p class="browse-lead">Filter by neighbourhood or cuisine, then place an order.</p>
+  {% if listings %}
+  <ul class="listing-grid">
+    {% for listing in listings %}
+    <li>
+      <a class="listing-card" href="/listings/{{ listing.pk }}/">
+        <h2>{{ listing.dish_name }}</h2>
+        <p class="listing-meta">{{ listing.cuisine }} · {{ listing.neighbourhood }}{% if listing.is_sold_out %} · Sold out{% endif %}</p>
+        <p class="listing-meta">{{ listing.seller.display_name }}</p>
+        <p class="listing-price">${{ listing.price }}</p>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="browse-empty">No listings match those filters.</p>
+  {% endif %}
+</section>
+{% endblock %}

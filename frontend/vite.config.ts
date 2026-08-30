@@ -2,11 +2,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { publicSsr } from "./src/modules/seo/devSsr.ts";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const api = process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), publicSsr(root)],
   resolve: {
     alias: {
       "@": path.resolve(root, "src"),
@@ -20,21 +22,37 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000",
+        target: api,
         changeOrigin: true,
       },
       "/admin": {
-        target: process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000",
+        target: api,
         changeOrigin: true,
       },
       "/static": {
-        target: process.env.FOOPLACE_API_PROXY ?? "http://127.0.0.1:8000",
+        target: api,
         changeOrigin: true,
+      },
+      "/sitemap.xml": {
+        target: api,
+        changeOrigin: false,
+      },
+      "/robots.txt": {
+        target: api,
+        changeOrigin: false,
       },
     },
   },
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: "assets/index.js",
+        chunkFileNames: "assets/[name].js",
+        assetFileNames: (info) =>
+          info.name?.endsWith(".css") ? "assets/index.css" : "assets/[name][extname]",
+      },
+    },
   },
 });
