@@ -17,6 +17,8 @@ class DiscoveryTests(SimpleTestCase):
         self.assertIn("modules.clerk", names)
         self.assertIn("modules.users", names)
         self.assertIn("modules.signup", names)
+        self.assertIn("modules.listings", names)
+        self.assertIn("modules.orders", names)
         self.assertIn("modules.admin_flow", names)
         self.assertNotIn("modules.management", names)
 
@@ -27,10 +29,14 @@ class ModuleUrlTests(TestCase):
             {
                 "health": reverse("health:health"),
                 "me": reverse("clerk:me"),
+                "listings": reverse("listings:index"),
+                "orders": reverse("orders:index"),
             },
             {
                 "health": "/api/health/",
                 "me": "/api/me/",
+                "listings": "/api/listings/",
+                "orders": "/api/orders/",
             },
         )
 

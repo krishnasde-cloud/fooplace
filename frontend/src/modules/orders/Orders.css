@@ -1,0 +1,145 @@
+.place-order,
+.order-status,
+.buyer-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.place-order,
+.order-status,
+.buyer-orders {
+  padding: 0;
+}
+
+.order-status,
+.buyer-orders {
+  padding: 8px 20px 48px;
+}
+
+.place-order h2,
+.order-status h1,
+.buyer-orders h1 {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.order-status h1,
+.buyer-orders h1 {
+  font-size: 36px;
+  letter-spacing: -0.8px;
+}
+
+.quantity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-row input {
+  width: 72px;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.deposit-box,
+.order-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deposit-box strong,
+.order-card strong {
+  color: var(--text-h);
+}
+
+.order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.order-primary,
+.order-secondary {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.order-primary {
+  color: #fff;
+  background: #6c47ff;
+  border: 1px solid transparent;
+}
+
+.order-secondary {
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.order-primary:disabled,
+.order-secondary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.order-error {
+  color: var(--err);
+}
+
+.order-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.order-timeline li {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.order-timeline li.current {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.order-timeline li.done {
+  color: var(--ok);
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.order-list a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.listing-back {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 15px;
+}

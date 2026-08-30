@@ -23,6 +23,17 @@ from modules.users.user_sync import link_clerk_user
 
 # Liveness stays public so the SPA can check Django without a session.
 PUBLIC_API_PATHS = frozenset({"/api/health/", "/api/health"})
+# Buyers can browse listings before signing in.
+PUBLIC_GET_PREFIXES = ("/api/listings",)
+
+
+def is_public_api(request) -> bool:
+    path = request.path
+    if path in PUBLIC_API_PATHS:
+        return True
+    if request.method != "GET":
+        return False
+    return any(path == prefix or path.startswith(f"{prefix}/") for prefix in PUBLIC_GET_PREFIXES)
 
 
 @dataclass
@@ -123,10 +134,7 @@ class ClerkAuthenticationMiddleware(MiddlewareMixin):
         if not request.path.startswith("/api/"):
             return None
 
-        if (
-            request.path in PUBLIC_API_PATHS
-            and state.reason is AuthErrorReason.SESSION_TOKEN_MISSING
-        ):
+        if is_public_api(request) and state.reason is AuthErrorReason.SESSION_TOKEN_MISSING:
             return None
 
         return _unauthorized(state)
