@@ -26,16 +26,20 @@ export function ListingsHome() {
 function LocalListingsHome() {
   const source = useMemo(() => localSource(), []);
   const reviews = useMemo(() => localReviews(), []);
+  const publicSource = useMemo(() => ({ listActive: publicBrowse }), []);
   const pending = loadPendingSignup();
   const isSeller = pending?.type === "seller";
   const isBuyer = pending?.type === "buyer";
   const [page, setPage] = useState<Page>({ name: "home" });
+  const profileSource = page.name === "profile" && page.sellerId < 0
+    ? reviews
+    : { sellerProfile: publicSellerProfile };
 
   if (page.name === "profile") {
     return (
       <SellerProfilePage
-        sellerId={page.sellerId}
-        source={reviews}
+        sellerId={Math.abs(page.sellerId)}
+        source={profileSource}
         onBack={() => setPage({ name: "home" })}
       />
     );
@@ -53,13 +57,13 @@ function LocalListingsHome() {
     return (
       <SellerDashboard
         source={source}
-        onPublicProfile={() => setPage({ name: "profile", sellerId: 1 })}
+        onPublicProfile={() => setPage({ name: "profile", sellerId: -1 })}
       />
     );
   }
   return (
     <MarketplaceBrowse
-      source={source}
+      source={publicSource}
       onOpenSeller={(sellerId) => setPage({ name: "profile", sellerId })}
       onOrder={isBuyer ? (listing) => reviews.placeOrder(listing.id) : undefined}
       onOrders={isBuyer ? () => setPage({ name: "orders" }) : undefined}
