@@ -9,6 +9,52 @@
   flex-grow: 1;
 }
 
+.signup-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.signup-social {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signup-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.signup-social-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.signup-social-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.signup-divider {
+  margin: 0;
+  text-align: center;
+  color: var(--text);
+  font-size: 14px;
+}
+
+
 .signup-form h1 {
   font-size: 32px;
   letter-spacing: -0.8px;

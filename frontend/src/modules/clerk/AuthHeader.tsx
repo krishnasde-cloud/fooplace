@@ -4,11 +4,7 @@ import "./AuthHeader.css";
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-type AuthHeaderProps = {
-  onSignUp?: () => void;
-};
-
-export function AuthHeader({ onSignUp }: AuthHeaderProps) {
+export function AuthHeader() {
   return (
     <header className="auth-bar">
       {publishableKey ? (
@@ -19,9 +15,9 @@ export function AuthHeader({ onSignUp }: AuthHeaderProps) {
                 Sign in
               </button>
             </SignInButton>
-            <button type="button" className="auth-signup" onClick={onSignUp}>
+            <a className="auth-signup" href="#/signup">
               Sign up
-            </button>
+            </a>
           </Show>
           <Show when="signed-in">
             <AdminLink />
@@ -33,9 +29,9 @@ export function AuthHeader({ onSignUp }: AuthHeaderProps) {
           <a className="auth-admin" href="/admin/">
             Admin
           </a>
-          <button type="button" className="auth-signup" onClick={onSignUp}>
+          <a className="auth-signup" href="#/signup">
             Sign up
-          </button>
+          </a>
           <span className="auth-hint">Set VITE_CLERK_PUBLISHABLE_KEY to enable sign-in</span>
         </>
       )}

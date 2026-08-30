@@ -26,6 +26,7 @@
   color: #fff;
   background: #6c47ff;
   border: 1px solid transparent;
+  text-decoration: none;
 }
 
 .auth-admin {

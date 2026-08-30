@@ -1,17 +1,22 @@
-import { useState } from "react";
-import { AuthHeader } from "@/modules/clerk/index.ts";
+import { AuthHeader, ClerkRedirect } from "@/modules/clerk/index.ts";
 import { BrowseListings, ListingDetail, ListingsHome } from "@/modules/listings/index.ts";
 import { BuyerOrders, OrderStatus } from "@/modules/orders/index.ts";
 import { SignupGate } from "@/modules/signup/index.ts";
 import { useHashRoute } from "./route.ts";
 import "./App.css";
 
+function goHome() {
+  if (window.location.hash !== "#/" && window.location.hash !== "") {
+    window.location.hash = "#/";
+  }
+}
+
 function App() {
-  const [signupOpen, setSignupOpen] = useState(false);
   const route = useHashRoute();
 
   return (
     <>
+      <ClerkRedirect />
       <div className="app-top">
         <nav className="app-nav">
           <a href="#/" className={route.page === "browse" || route.page === "listing" ? "active" : undefined}>
@@ -24,13 +29,9 @@ function App() {
             My orders
           </a>
         </nav>
-        <AuthHeader onSignUp={() => setSignupOpen(true)} />
+        <AuthHeader />
       </div>
-      <SignupGate
-        requested={signupOpen}
-        onFinished={() => setSignupOpen(false)}
-        onCancel={() => setSignupOpen(false)}
-      >
+      <SignupGate requested={route.page === "signup"} onFinished={goHome} onCancel={goHome}>
         {route.page === "listing" ? <ListingDetail id={route.id} /> : null}
         {route.page === "orders" ? <BuyerOrders /> : null}
         {route.page === "order" ? <OrderStatus id={route.id} /> : null}

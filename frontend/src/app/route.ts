@@ -5,7 +5,8 @@ export type Route =
   | { page: "listing"; id: number }
   | { page: "sell" }
   | { page: "orders" }
-  | { page: "order"; id: number };
+  | { page: "order"; id: number }
+  | { page: "signup" };
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, "") || "/";
@@ -22,6 +23,9 @@ export function parseHash(hash: string): Route {
   }
   if (path === "/sell" || path === "/sell/") {
     return { page: "sell" };
+  }
+  if (path === "/signup" || path === "/signup/") {
+    return { page: "signup" };
   }
   return { page: "browse" };
 }
